@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { MaterialRequirement } from "../types";
 
 type MaterialsSummaryProps = {
@@ -7,6 +8,88 @@ type MaterialsSummaryProps = {
 };
 
 const numberFormat = new Intl.NumberFormat();
+
+const materialIconFiles: Record<string, string> = {
+  "xp-gray": "xp-gray.png",
+  "xp-blue": "xp-blue.png",
+  "xp-gold": "xp-gold.png",
+  credits: "credits.png",
+  "growth-common-justice": "growth-common-justice.png",
+  "growth-great-justice": "growth-great-justice.png",
+  "growth-premium-justice": "growth-premium-justice.png",
+  "growth-common-void": "growth-common-void.png",
+  "growth-great-void": "growth-great-void.png",
+  "growth-premium-void": "growth-premium-void.png",
+  "eye-of-wailing-prodigal": "eye-of-wailing-prodigal.png",
+  "shards-of-condemnation": "shards-of-condemnation.png",
+  "undetermined-ego-crystal": "undetermined-ego-crystal.png",
+};
+
+function shortMaterialName(id: string, name: string) {
+  const shortNames: Record<string, string> = {
+    "xp-gray": "Gray XP",
+    "xp-blue": "Blue XP",
+    "xp-gold": "Gold XP",
+    "class-manual-i": "Class Manual I",
+    "class-manual-ii": "Class Manual II",
+    "class-manual-iii": "Class Manual III",
+    credits: "Units",
+    "eye-of-wailing-prodigal": "Wailing Eye",
+    "shards-of-condemnation": "Judas Shards",
+    "undetermined-ego-crystal": "Ego Crystal",
+  };
+  if (shortNames[id]) return shortNames[id];
+
+  const growthStone = name.match(/^(Common|Great|Premium) Growth Stone of (?:the )?(.+)$/);
+  if (growthStone) return `${growthStone[1]} ${growthStone[2]} Stone`;
+  return name;
+}
+
+function MaterialIcon({ id, name }: { id: string; name: string }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageFile = materialIconFiles[id];
+  const classTier = id === "class-manual-i" ? "I" : id === "class-manual-ii" ? "II" : "III";
+
+  return (
+    <span className={`material-art${!imageFile || imageFailed ? " is-placeholder" : ""}`}>
+      {imageFile && !imageFailed ? (
+        <img
+          src={`/images/materials/${imageFile}`}
+          alt=""
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span aria-hidden="true">{id.startsWith("class-manual-") ? classTier : "?"}</span>
+      )}
+      <span className="sr-only">{name}</span>
+    </span>
+  );
+}
+
+function MaterialTile({ item }: { item: MaterialRequirement }) {
+  const shortName = shortMaterialName(item.id, item.name);
+  const countDescription = item.inventoryTracked
+    ? `${numberFormat.format(item.remaining)} needed; ${numberFormat.format(item.owned)} owned of ${numberFormat.format(item.required)} total`
+    : `${numberFormat.format(item.required)} needed; class-specific inventory not matched`;
+
+  return (
+    <article className="requirement-tile" role="group" aria-label={`${item.name}. ${countDescription}`} title={item.name}>
+      <MaterialIcon id={item.id} name={item.name} />
+      <strong className="requirement-tile-name">{shortName}</strong>
+      <span className={`requirement-tile-needed${item.remaining === 0 ? " is-covered" : ""}`}>
+        {item.inventoryTracked
+          ? `${numberFormat.format(item.remaining)} needed`
+          : `${numberFormat.format(item.required)} needed`}
+      </span>
+      <span className="requirement-tile-owned">
+        {item.inventoryTracked
+          ? `${numberFormat.format(item.owned)} owned / ${numberFormat.format(item.required)} total`
+          : "Class match pending"}
+      </span>
+    </article>
+  );
+}
 
 export function MaterialsSummary({
   activePlanCount,
@@ -21,14 +104,14 @@ export function MaterialsSummary({
           <h2 id="materials-heading">Materials needed</h2>
         </div>
         <span className="material-symbol" aria-hidden="true">
-          ◈
+          &#9671;
         </span>
       </div>
 
       {requirements.length === 0 ? (
         <div className="requirements-empty">
           <div className="requirements-art" aria-hidden="true">
-            ◇
+            &#9671;
           </div>
           <h3>{activePlanCount === 0 ? "No active plans" : "No upgrades planned"}</h3>
           <p>
@@ -39,34 +122,9 @@ export function MaterialsSummary({
         </div>
       ) : (
         <>
-          <div className="requirements-list">
+          <div className="requirements-grid">
             {requirements.map((item) => (
-              <div className="requirement-row" key={item.id}>
-                <div className="requirement-name">
-                  <strong>{item.name}</strong>
-                  {!item.inventoryTracked && (
-                    <span>Class-specific; inventory not matched yet</span>
-                  )}
-                </div>
-                <div className="requirement-amounts">
-                  {item.inventoryTracked ? (
-                    <>
-                      <span>{numberFormat.format(item.required)} total</span>
-                      <span>{numberFormat.format(item.owned)} owned</span>
-                      <strong className="requirement-remaining">
-                        {numberFormat.format(item.remaining)} needed
-                      </strong>
-                    </>
-                  ) : (
-                    <>
-                      <span>{numberFormat.format(item.required)} total</span>
-                      <strong className="requirement-remaining">
-                        {numberFormat.format(item.required)} needed
-                      </strong>
-                    </>
-                  )}
-                </div>
-              </div>
+              <MaterialTile key={item.id} item={item} />
             ))}
           </div>
           <p className="requirements-note">
@@ -85,7 +143,7 @@ export function MaterialsSummary({
         type="button"
         onClick={onManageInventory}
       >
-        Manage shared inventory <span aria-hidden="true">→</span>
+        Manage shared inventory <span aria-hidden="true">&#8594;</span>
       </button>
     </aside>
   );

@@ -1,5 +1,6 @@
 import type { Character, CharacterPlan } from "../types";
 import { PlanCostSummary } from "./PlanCostSummary";
+import { PotentialPlanner } from "./PotentialPlanner";
 
 type CharacterPlanCardProps = {
   character: Character;
@@ -22,7 +23,11 @@ export function CharacterPlanCard({
         </div>
         <div className="character-info">
           <h3>{character.name}</h3>
-          <span className="character-meta">Demo character</span>
+          <span className="character-meta">
+            {character.rarity
+              ? `${character.rarity}-star · ${character.combatClass} · ${character.attribute}`
+              : "Demo character"}
+          </span>
         </div>
         <label className="toggle-control">
           <span>{plan.active ? "Active" : "Paused"}</span>
@@ -86,11 +91,13 @@ export function CharacterPlanCard({
           <span className="pending-label">Promotions</span>
           <strong className="data-included">Tier costs included</strong>
         </div>
-        <div>
-          <span className="pending-label">Potential</span>
-          <strong>Tree data pending</strong>
-        </div>
       </div>
+
+      <PotentialPlanner
+        character={character}
+        plan={plan}
+        onUpdate={onUpdate}
+      />
 
       <div className="plan-card-footer">
         <span className="demo-note">Unverified demo record</span>

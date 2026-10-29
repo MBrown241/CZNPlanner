@@ -5,7 +5,14 @@ import {
   xpPerLevel,
 } from "../data/progression";
 import type { ManualTier } from "../data/progression";
-import type { CharacterPlan, InventoryItem, MaterialRequirement } from "../types";
+import { potentialProfiles } from "../data/potentials";
+import { calculatePotentialCost, getPotentialProgress } from "./potentialCosts";
+import type {
+  Character,
+  CharacterPlan,
+  InventoryItem,
+  MaterialRequirement,
+} from "../types";
 
 export type PlanCost = {
   xp: number;
@@ -64,8 +71,13 @@ const CLASS_RESOURCE_INFO = [
 export function calculateRequirements(
   plans: CharacterPlan[],
   inventory: InventoryItem[],
+  characters: Character[],
 ): MaterialRequirement[] {
   const totals: Record<string, number> = {};
+  const potentialResources = new Map<
+    string,
+    { id: string; name: string; inventoryTracked: boolean }
+  >();
   const activePlans = plans.filter((plan) => plan.active);
 
   for (const plan of activePlans) {
@@ -77,6 +89,23 @@ export function calculateRequirements(
     for (const resource of CLASS_RESOURCE_INFO) {
       totals[resource.id] = (totals[resource.id] ?? 0) + cost.manuals[resource.tier];
     }
+
+    const character = characters.find((item) => item.id === plan.characterId);
+    const profileId = character?.potentialProfileId ?? plan.characterId;
+    const profile = potentialProfiles[profileId];
+    for (const node of profile?.nodes ?? []) {
+      const progress = getPotentialProgress(plan, node);
+      if (progress.targetLevel <= progress.currentLevel) continue;
+      const { costs } = calculatePotentialCost(node, progress.currentLevel, progress.targetLevel);
+      for (const resource of costs) {
+        totals[resource.id] = (totals[resource.id] ?? 0) + resource.amount;
+        potentialResources.set(resource.id, {
+          id: resource.id,
+          name: resource.name,
+          inventoryTracked: true,
+        });
+      }
+    }
   }
 
   const inventoryTotals = inventory.reduce<Record<string, number>>((result, item) => {
@@ -84,13 +113,18 @@ export function calculateRequirements(
     return result;
   }, {});
 
-  const resourceInfo = [
-    ...XP_RESOURCE_INFO.map(({ id, name }) => ({ id, name, inventoryTracked: true })),
-    ...CLASS_RESOURCE_INFO.map(({ id, name }) => ({ id, name, inventoryTracked: false })),
-    { id: "credits", name: "Credits", inventoryTracked: true },
-  ];
+  const resourceInfoById = new Map(
+    [
+      ...XP_RESOURCE_INFO.map(({ id, name }) => ({ id, name, inventoryTracked: true })),
+      ...CLASS_RESOURCE_INFO.map(({ id, name }) => ({ id, name, inventoryTracked: false })),
+      { id: "credits", name: "Credits / Units", inventoryTracked: true },
+    ].map((resource) => [resource.id, resource] as const),
+  );
+  for (const resource of potentialResources.values()) {
+    if (!resourceInfoById.has(resource.id)) resourceInfoById.set(resource.id, resource);
+  }
 
-  return resourceInfo
+  return [...resourceInfoById.values()]
     .filter(({ id }) => (totals[id] ?? 0) > 0)
     .map(({ id, name, inventoryTracked }) => {
       const required = totals[id] ?? 0;

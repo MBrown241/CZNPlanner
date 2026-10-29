@@ -556,7 +556,7 @@
 
 .pending-data-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
   padding: 13px 0 4px;
 }
@@ -617,6 +617,387 @@
 
 .no-upgrade-cost {
   margin: 0;
+}
+
+.potential-planner {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.potential-open-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.potential-open-button:hover {
+  background: var(--surface-hover);
+}
+
+.potential-count {
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.potential-unavailable p {
+  margin: 7px 0 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.potential-dialog {
+  display: grid;
+  width: min(1120px, calc(100vw - 28px));
+  max-width: none;
+  height: min(800px, 88vh);
+  max-height: 900px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-strong);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.35);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.potential-dialog:not([open]) {
+  display: none;
+}
+
+.potential-dialog::backdrop {
+  background: rgba(8, 8, 15, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.potential-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.potential-dialog-header h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+}
+
+.potential-dialog-header p {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.potential-dialog-close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.potential-game-layout {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 290px;
+}
+
+.potential-map-scroll {
+  min-width: 0;
+  min-height: 0;
+}
+
+.potential-tree-map {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  min-height: 470px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 48%, transparent 0 48%, rgba(120, 115, 145, 0.04) 48.2% 48.5%, transparent 48.7%),
+    radial-gradient(ellipse at 50% 48%, var(--surface-raised), var(--surface));
+}
+
+.potential-tree-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.potential-tree-lines line {
+  stroke: rgba(181, 190, 211, 0.58);
+  stroke-width: 1.5px;
+  stroke-dasharray: 2 1;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.potential-tree-lines line.is-active {
+  stroke: var(--amber);
+  stroke-width: 2.5px;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--amber) 55%, transparent));
+}
+
+.potential-map-node {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  width: 136px;
+  justify-items: center;
+  gap: 3px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: transparent;
+  color: var(--text-strong);
+  font: inherit;
+  cursor: pointer;
+}
+
+.potential-map-node-circle {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--surface-raised) 0 53%, var(--surface-hover) 54% 68%, var(--surface) 69%);
+  color: var(--text-muted);
+  font-size: 1.45rem;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--border) 40%, transparent), 0 3px 12px rgba(0, 0, 0, 0.12);
+  transition: border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+.potential-map-node.is-complete .potential-map-node-circle {
+  border-color: var(--accent-border);
+  background: radial-gradient(circle, var(--accent-soft) 0 54%, var(--surface-hover) 55% 70%, var(--surface) 71%);
+  color: var(--accent);
+}
+
+.potential-map-node.is-planned .potential-map-node-circle {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-border) 52%, transparent), 0 0 22px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.potential-map-node.is-selected .potential-map-node-circle {
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 0 6px var(--amber-soft), 0 0 24px color-mix(in srgb, var(--amber) 48%, transparent);
+}
+
+.potential-map-node-level {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-strong);
+  font-size: 0.61rem;
+  font-weight: 700;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.12);
+}
+
+.potential-map-node-name {
+  max-width: 136px;
+  color: var(--text-muted);
+  font-size: 0.61rem;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.potential-map-node.is-selected .potential-map-node-name {
+  color: var(--text-strong);
+  font-weight: 650;
+}
+
+.potential-node-details {
+  min-width: 0;
+  padding: 23px 18px;
+  border-left: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.potential-detail-kicker {
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.potential-node-details h3 {
+  margin: 0 0 20px;
+  color: var(--text-strong);
+  font-size: 1.08rem;
+  line-height: 1.3;
+}
+
+.potential-detail-levels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.potential-stepper {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 85px;
+}
+
+.potential-stepper > span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.potential-stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.potential-stepper-controls button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-hover);
+  color: var(--text-strong);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.potential-stepper-controls button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.potential-stepper-controls output {
+  display: grid;
+  min-width: 38px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.potential-detail-cost {
+  margin-top: 18px;
+  color: var(--text-strong);
+  font-size: 0.72rem;
+}
+
+.potential-detail-cost > span {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+}
+
+.potential-detail-cost ul {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.potential-detail-cost li {
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  line-height: 1.35;
+}
+
+.potential-detail-cost li strong {
+  color: var(--accent);
+}
+
+.potential-detail-cost > strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-weight: 550;
+}
+
+.potential-detail-cost small {
+  display: block;
+  margin-top: 9px;
+  color: var(--amber);
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.potential-dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.potential-dialog-footer button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  color: #fff;
+  font: inherit;
+  font-size: 1.45rem;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.potential-dialog-footer .potential-cancel-button {
+  background: var(--red);
+}
+
+.potential-dialog-footer .potential-save-button {
+  background: var(--green);
+}
+
+.potential-unavailable h4 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.74rem;
 }
 
 .plan-card-footer {
@@ -694,49 +1075,82 @@
   line-height: 1.6;
 }
 
-.requirements-list {
+.requirements-grid {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 15px 0;
 }
 
-.requirement-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.requirement-name {
+.requirement-tile {
   display: grid;
-  gap: 4px;
   min-width: 0;
+  justify-items: center;
+  align-content: start;
+  gap: 5px;
+  padding: 9px 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  text-align: center;
 }
 
-.requirement-name strong {
-  color: var(--text-strong);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.requirement-name span {
-  color: var(--text-faint);
-  font-size: 0.62rem;
-  line-height: 1.4;
-}
-
-.requirement-amounts {
+.material-art {
+  position: relative;
   display: grid;
-  flex: 0 0 auto;
-  justify-items: end;
-  color: var(--text-muted);
-  font-size: 0.65rem;
-  line-height: 1.5;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 750;
 }
 
-.requirement-remaining {
+.material-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.material-art.is-placeholder {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.requirement-tile-name {
+  display: -webkit-box;
+  min-height: 2.35em;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 0.63rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.requirement-tile-needed {
   color: var(--accent);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.requirement-tile-needed.is-covered {
+  color: var(--green);
+}
+
+.requirement-tile-owned {
+  color: var(--text-faint);
+  font-size: 0.55rem;
+  line-height: 1.2;
 }
 
 .requirements-note {
@@ -765,6 +1179,16 @@
   align-items: center;
   gap: 7px;
   margin-top: 7px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 .inventory-badge {
@@ -1052,5 +1476,31 @@
   .app-footer {
     flex-direction: column;
     padding: 15px 18px;
+  }
+
+  .potential-dialog {
+    height: 88vh;
+  }
+
+  .potential-game-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(330px, 1fr) auto;
+    overflow: auto;
+  }
+
+  .potential-map-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .potential-tree-map {
+    width: 760px;
+    min-height: 430px;
+  }
+
+  .potential-node-details {
+    border-top: 1px solid var(--border);
+    border-left: 0;
+    padding: 17px;
   }
 }

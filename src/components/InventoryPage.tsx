@@ -77,8 +77,10 @@ export function InventoryPage({
           </span>
           <p>
             Use IDs <code>credits</code>, <code>xp-gray</code>, <code>xp-blue</code>, or{" "}
-            <code>xp-gold</code> to subtract those items from planner totals. Class
-            manuals are not matched until character classes are added.
+            <code>xp-gold</code> for automatic totals. Potential IDs follow{" "}
+            <code>growth-[common|great|premium]-[passion|instinct|order|justice|void]</code>,
+            plus <code>eye-of-wailing-prodigal</code>, <code>shards-of-condemnation</code>,
+            and <code>undetermined-ego-crystal</code>.
           </p>
         </div>
 

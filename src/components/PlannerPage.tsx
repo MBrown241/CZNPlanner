@@ -36,8 +36,8 @@ export function PlannerPage({
   );
   const activePlanCount = plans.filter((plan) => plan.active).length;
   const requirements = useMemo(
-    () => calculateRequirements(plans, inventory),
-    [plans, inventory],
+    () => calculateRequirements(plans, inventory, characters),
+    [plans, inventory, characters],
   );
 
   function addSelectedCharacter() {
@@ -115,7 +115,7 @@ export function PlannerPage({
         <section className="add-panel" aria-labelledby="add-character-title">
           <div>
             <h2 id="add-character-title">Add a character plan</h2>
-            <p>Demo roster only. Character data is unverified.</p>
+            <p>Includes placeholders and Potential cost examples for Mika and Renoa.</p>
           </div>
           <div className="add-controls">
             <label className="visually-hidden" htmlFor="character-select">
@@ -166,7 +166,7 @@ export function PlannerPage({
                 ✦
               </span>
               <h3>No plans yet</h3>
-              <p>Add a demo character to start setting upgrade goals.</p>
+              <p>Add a character to start setting level and Potential goals.</p>
               <button
                 className="button button-secondary"
                 type="button"

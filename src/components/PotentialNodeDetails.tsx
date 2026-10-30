@@ -10,13 +10,8 @@ type PotentialNodeDetailsProps = {
 };
 
 function shortName(name: string) {
-  if (name === "Credits / Units") return "Credits";
-  if (name.startsWith("Eye of Wailing Prodigal")) return "Wailing Prodigal Eyes";
-  if (name.startsWith("Shards of Condemnation")) return "Judas Shards";
-  return name
-    .replace(" Growth Stone of the ", " ")
-    .replace(" Growth Stone of ", " ")
-    .replace(/^(Common|Great|Premium) (.+)$/, "$1 $2 Growth Stones");
+  if (name === "Credits / Units") return "Units";
+  return name;
 }
 
 export function PotentialNodeDetails({ node, progress, isUnlocked, onChange }: PotentialNodeDetailsProps) {

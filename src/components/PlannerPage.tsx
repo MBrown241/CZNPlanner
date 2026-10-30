@@ -2,12 +2,14 @@ import { useMemo, useRef } from "react";
 import { CharacterPlanCard } from "./CharacterPlanCard";
 import { MaterialsSummary } from "./MaterialsSummary";
 import { calculateRequirements } from "../lib/calculator";
+import { allocateInventoryByPlan } from "../lib/inventoryAllocation";
 import type { Character, CharacterPlan, InventoryItem } from "../types";
 
 type PlannerPageProps = {
   characters: Character[];
   plans: CharacterPlan[];
   inventory: InventoryItem[];
+  onOpenInventoryItem: (materialId: string) => void;
   onAddCharacter: (characterId: string) => void;
   onUpdatePlan: (characterId: string, updates: Partial<CharacterPlan>) => void;
   onRemovePlan: (characterId: string) => void;
@@ -18,6 +20,7 @@ export function PlannerPage({
   characters,
   plans,
   inventory,
+  onOpenInventoryItem,
   onAddCharacter,
   onUpdatePlan,
   onRemovePlan,
@@ -34,6 +37,10 @@ export function PlannerPage({
   const activePlanCount = plans.filter((plan) => plan.active).length;
   const requirements = useMemo(
     () => calculateRequirements(plans, inventory, characters),
+    [plans, inventory, characters],
+  );
+  const inventoryCompletion = useMemo(
+    () => allocateInventoryByPlan(plans, inventory, characters),
     [plans, inventory, characters],
   );
 
@@ -70,6 +77,7 @@ export function PlannerPage({
       <MaterialsSummary
         activePlanCount={activePlanCount}
         requirements={requirements}
+        onOpenInventoryItem={onOpenInventoryItem}
       />
 
       <dialog className="potential-dialog character-picker-dialog" ref={characterPickerRef}>
@@ -159,6 +167,8 @@ export function PlannerPage({
                     onUpdate={onUpdatePlan}
                     onRemove={onRemovePlan}
                     onReorder={onReorderPlans}
+                    onOpenInventoryItem={onOpenInventoryItem}
+                    completedMaterialIds={inventoryCompletion.get(plan.characterId) ?? new Set<string>()}
                   />
                 );
               })}

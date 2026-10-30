@@ -10,6 +10,8 @@ type CharacterPlanCardProps = {
   onUpdate: (characterId: string, updates: Partial<CharacterPlan>) => void;
   onRemove: (characterId: string) => void;
   onReorder: (draggedId: string, targetId: string) => void;
+  onOpenInventoryItem: (materialId: string) => void;
+  completedMaterialIds: ReadonlySet<string>;
 };
 
 export function CharacterPlanCard({
@@ -18,6 +20,8 @@ export function CharacterPlanCard({
   onUpdate,
   onRemove,
   onReorder,
+  onOpenInventoryItem,
+  completedMaterialIds,
 }: CharacterPlanCardProps) {
   const [loadedPortrait, setLoadedPortrait] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -193,8 +197,18 @@ export function CharacterPlanCard({
         </label>
       </div>
 
-      <PlanCostSummary character={character} plan={plan} />
-      <PotentialCostSummary character={character} plan={plan} />
+      <PlanCostSummary
+        character={character}
+        plan={plan}
+        onOpenInventoryItem={onOpenInventoryItem}
+        completedMaterialIds={completedMaterialIds}
+      />
+      <PotentialCostSummary
+        character={character}
+        plan={plan}
+        onOpenInventoryItem={onOpenInventoryItem}
+        completedMaterialIds={completedMaterialIds}
+      />
 
       <p className="promotion-status">
         <span className="status-dot green-dot" /> Promotions included

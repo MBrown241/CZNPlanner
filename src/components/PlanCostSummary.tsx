@@ -1,9 +1,12 @@
 import { calculatePlanCost } from "../lib/calculator";
+import { getClassManualId, materialCatalogById } from "../data/materials";
 import type { Character, CharacterPlan } from "../types";
 
 type PlanCostSummaryProps = {
   character: Character;
   plan: CharacterPlan;
+  onOpenInventoryItem: (materialId: string) => void;
+  completedMaterialIds: ReadonlySet<string>;
 };
 
 type CostItem = {
@@ -17,35 +20,66 @@ type CostItem = {
 const numberFormat = new Intl.NumberFormat();
 
 const xpManuals = [
-  { id: "xp-gold", label: "Gold XP", image: "xp-gold.png", tier: "gold" as const },
-  { id: "xp-blue", label: "Blue XP", image: "xp-blue.png", tier: "blue" as const },
-  { id: "xp-gray", label: "Gray XP", image: "xp-gray.png", tier: "gray" as const },
+  { id: "xp-gold", label: "Premium Battle Memory", image: "xp-gold.png", tier: "gold" as const },
+  { id: "xp-blue", label: "Advanced Battle Memory", image: "xp-blue.png", tier: "blue" as const },
+  { id: "xp-gray", label: "Basic Battle Memory", image: "xp-gray.png", tier: "gray" as const },
 ];
 
-const manualClassSlugs: Record<string, string> = {
-  Hunter: "hunter",
-  Controller: "controller",
+const manualTierNames: Record<"I" | "II" | "III", string> = {
+  I: "Common",
+  II: "Advanced",
+  III: "Premium",
 };
 
-function CostTile({ item }: { item: CostItem }) {
+function CostTile({
+  item,
+  onOpenInventoryItem,
+  isComplete,
+}: {
+  item: CostItem;
+  onOpenInventoryItem?: () => void;
+  isComplete: boolean;
+}) {
+  const art = (
+    <span className={`plan-cost-art${item.image ? "" : " is-placeholder"}${isComplete ? " is-complete" : ""}`}>
+      {item.image ? (
+        <img src={`/images/materials/${item.image}`} alt="" loading="lazy" />
+      ) : (
+        <span aria-hidden="true">{item.fallback}</span>
+      )}
+      {isComplete && (
+        <span className="material-complete-check" role="img" aria-label="Enough in inventory">
+          ✓
+        </span>
+      )}
+    </span>
+  );
+
   return (
     <div className="plan-cost-tile" role="group" aria-label={`${item.count} ${item.name}`} title={item.name}>
-      <span className={`plan-cost-art${item.image ? "" : " is-placeholder"}`}>
-        {item.image ? (
-          <img src={`/images/materials/${item.image}`} alt="" loading="lazy" />
-        ) : (
-          <span aria-hidden="true">{item.fallback}</span>
-        )}
-      </span>
+      {onOpenInventoryItem ? (
+        <button
+          className="plan-cost-icon-button"
+          type="button"
+          onClick={onOpenInventoryItem}
+          aria-label={`Edit ${item.name} in inventory`}
+          title={`Edit ${item.name} in inventory`}
+        >
+          {art}
+        </button>
+      ) : art}
       <strong>{numberFormat.format(item.count)}</strong>
-      <span className="plan-cost-tile-name">{item.name}</span>
     </div>
   );
 }
 
-export function PlanCostSummary({ character, plan }: PlanCostSummaryProps) {
+export function PlanCostSummary({
+  character,
+  plan,
+  onOpenInventoryItem,
+  completedMaterialIds,
+}: PlanCostSummaryProps) {
   const cost = calculatePlanCost(plan.currentLevel, plan.targetLevel);
-  const classSlug = character.combatClass ? manualClassSlugs[character.combatClass] : undefined;
   const items: CostItem[] = xpManuals
     .map((manual) => ({
       id: manual.id,
@@ -59,7 +93,7 @@ export function PlanCostSummary({ character, plan }: PlanCostSummaryProps) {
   if (credits > 0) {
     items.push({
       id: "credits",
-      name: "Credits",
+      name: "Units",
       count: credits,
       image: "credits.png",
     });
@@ -68,14 +102,13 @@ export function PlanCostSummary({ character, plan }: PlanCostSummaryProps) {
   (Object.entries(cost.manuals) as ["I" | "II" | "III", number][]).forEach(([tier, count]) => {
     if (count === 0) return;
     const tierNumber = tier === "I" ? 1 : tier === "II" ? 2 : 3;
-    const image = classSlug && !(classSlug === "controller" && tier === "III")
-      ? `class-manual-${tier.toLowerCase()}-${classSlug}.png`
-      : undefined;
+    const id = getClassManualId(tier, character.combatClass);
+    const material = materialCatalogById.get(id);
     items.push({
-      id: `class-manual-${tier.toLowerCase()}`,
-      name: `Manual ${tier}`,
+      id,
+      name: material?.name ?? `${manualTierNames[tier]} Class Manual`,
       count,
-      image,
+      image: material?.image,
       fallback: String(tierNumber),
     });
   });
@@ -90,7 +123,18 @@ export function PlanCostSummary({ character, plan }: PlanCostSummaryProps) {
         <p className="no-upgrade-cost">At target level</p>
       ) : (
         <div className="plan-cost-items">
-          {items.map((item) => <CostTile key={item.id} item={item} />)}
+          {items.map((item) => (
+            <CostTile
+              key={item.id}
+              item={item}
+              isComplete={completedMaterialIds.has(item.id)}
+              onOpenInventoryItem={
+                materialCatalogById.has(item.id)
+                  ? () => onOpenInventoryItem(item.id)
+                  : undefined
+              }
+            />
+          ))}
         </div>
       )}
     </section>

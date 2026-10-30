@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AppHeader } from "./components/AppHeader";
+import { InventoryAmountDialog } from "./components/InventoryAmountDialog";
 import { InventoryPage } from "./components/InventoryPage";
 import { PlannerPage } from "./components/PlannerPage";
 import { characters } from "./data/characters";
@@ -18,6 +19,20 @@ function App() {
   const [plans, setPlans] = useState<CharacterPlan[]>(readPlans);
   const [inventory, setInventory] = useState<InventoryItem[]>(readInventory);
   const [storageWarning, setStorageWarning] = useState(() => !canAccessStorage());
+  const [inventoryMaterialToOpen, setInventoryMaterialToOpen] = useState<string | null>(null);
+
+  const openInventoryMaterial = useCallback((materialId: string) => {
+    setInventoryMaterialToOpen(materialId);
+  }, []);
+
+  const closeInventoryMaterial = useCallback(() => {
+    setInventoryMaterialToOpen(null);
+  }, []);
+
+  const changePage = useCallback((nextPage: Page) => {
+    setInventoryMaterialToOpen(null);
+    setPage(nextPage);
+  }, []);
 
   function persistPlans(nextPlans: CharacterPlan[]) {
     setPlans(nextPlans);
@@ -99,9 +114,13 @@ function App() {
     persistInventory(inventory.filter((item) => item.materialId !== materialId));
   }
 
+  function clearInventory() {
+    persistInventory([]);
+  }
+
   return (
     <div className="app-shell">
-      <AppHeader page={page} onPageChange={setPage} />
+      <AppHeader page={page} onPageChange={changePage} />
 
       {storageWarning && (
         <div className="storage-notice" role="status">
@@ -114,6 +133,7 @@ function App() {
           characters={characters}
           plans={plans}
           inventory={inventory}
+          onOpenInventoryItem={openInventoryMaterial}
           onAddCharacter={addCharacter}
           onUpdatePlan={updatePlan}
           onRemovePlan={removePlan}
@@ -125,6 +145,18 @@ function App() {
           onAddItem={addInventoryItem}
           onUpdateQuantity={updateOwnedQuantity}
           onRemoveItem={removeInventoryItem}
+          onClearInventory={clearInventory}
+        />
+      )}
+
+      {page === "planner" && inventoryMaterialToOpen && (
+        <InventoryAmountDialog
+          materialId={inventoryMaterialToOpen}
+          inventory={inventory}
+          onAddItem={addInventoryItem}
+          onUpdateQuantity={updateOwnedQuantity}
+          onRemoveItem={removeInventoryItem}
+          onClose={closeInventoryMaterial}
         />
       )}
 

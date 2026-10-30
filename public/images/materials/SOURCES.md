@@ -24,4 +24,6 @@ https://game8.co/games/Chaos-Zero-Nightmare/archives/560783
 | class-manual-i-controller.png | Common Controller Manual |
 | class-manual-ii-controller.png | Advanced Controller Manual |
 
-Class manual images are individual item icons from the same Game8 index. The Premium Controller Manual icon is not included yet, so that tile uses a tier marker until its icon is available.
+Class manual images are individual item icons from the same Game8 index. When a class-specific icon is not available locally, the UI currently reuses the Hunter icon of the same tier so the material still has recognizable book artwork. Shared class-manual totals use the same tier-based fallback because their class is unknown.
+
+The catalog loads Passion, Instinct, and Order Growth Stone icons from Gacha.gg's item image paths (`icon_item_card_levelup_love_*`, `icon_item_card_levelup_instinct_*`, and `icon_item_card_levelup_norms_*`). These are served remotely; Justice and Void Growth Stone icons remain local PNG files.

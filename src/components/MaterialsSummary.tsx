@@ -1,81 +1,102 @@
 import { useState } from "react";
+import {
+  manualCatalogItems,
+  materialCatalogById,
+  materialImageSource,
+} from "../data/materials";
 import type { MaterialRequirement } from "../types";
 
 type MaterialsSummaryProps = {
   activePlanCount: number;
   requirements: MaterialRequirement[];
+  onOpenInventoryItem: (materialId: string) => void;
 };
 
 const numberFormat = new Intl.NumberFormat();
+type ManualTierId = "i" | "ii" | "iii";
 
-const materialIconFiles: Record<string, string> = {
-  "xp-gray": "xp-gray.png",
-  "xp-blue": "xp-blue.png",
-  "xp-gold": "xp-gold.png",
-  credits: "credits.png",
-  "growth-common-justice": "growth-common-justice.png",
-  "growth-great-justice": "growth-great-justice.png",
-  "growth-premium-justice": "growth-premium-justice.png",
-  "growth-common-void": "growth-common-void.png",
-  "growth-great-void": "growth-great-void.png",
-  "growth-premium-void": "growth-premium-void.png",
-  "eye-of-wailing-prodigal": "eye-of-wailing-prodigal.png",
-  "shards-of-condemnation": "shards-of-condemnation.png",
-  "undetermined-ego-crystal": "undetermined-ego-crystal.png",
-};
-
-function shortMaterialName(id: string, name: string) {
-  const shortNames: Record<string, string> = {
-    "xp-gray": "Gray XP",
-    "xp-blue": "Blue XP",
-    "xp-gold": "Gold XP",
-    "class-manual-i": "Class Manual I",
-    "class-manual-ii": "Class Manual II",
-    "class-manual-iii": "Class Manual III",
-    credits: "Units",
-    "eye-of-wailing-prodigal": "Wailing Eye",
-    "shards-of-condemnation": "Judas Shards",
-    "undetermined-ego-crystal": "Ego Crystal",
-  };
-  if (shortNames[id]) return shortNames[id];
-
-  const growthStone = name.match(/^(Common|Great|Premium) Growth Stone of (?:the )?(.+)$/);
-  if (growthStone) return `${growthStone[1]} ${growthStone[2]} Stone`;
-  return name;
-}
-
-function MaterialIcon({ id, name }: { id: string; name: string }) {
+function MaterialIcon({
+  id,
+  name,
+  onOpenInventoryItem,
+  onChooseClassManual,
+  isComplete,
+}: {
+  id: string;
+  name: string;
+  onOpenInventoryItem?: () => void;
+  onChooseClassManual?: () => void;
+  isComplete: boolean;
+}) {
   const [imageFailed, setImageFailed] = useState(false);
-  const imageFile = materialIconFiles[id];
-  const classTier = id === "class-manual-i" ? "I" : id === "class-manual-ii" ? "II" : "III";
+  const manualTier = id.match(/^class-manual-(i|ii|iii)(?:-|$)/)?.[1];
+  const imageFile = materialCatalogById.get(id)?.image ??
+    (manualTier ? `class-manual-${manualTier}-hunter.png` : undefined);
+  const classTier = manualTier?.toUpperCase();
 
-  return (
-    <span className={`material-art${!imageFile || imageFailed ? " is-placeholder" : ""}`}>
+  const art = (
+    <span className={`material-art${!imageFile || imageFailed ? " is-placeholder" : ""}${isComplete ? " is-complete" : ""}`}>
       {imageFile && !imageFailed ? (
         <img
-          src={`/images/materials/${imageFile}`}
+          src={materialImageSource(imageFile)}
           alt=""
           loading="lazy"
           onError={() => setImageFailed(true)}
         />
       ) : (
-        <span aria-hidden="true">{id.startsWith("class-manual-") ? classTier : "?"}</span>
+        <span aria-hidden="true">{classTier ?? "?"}</span>
+      )}
+      {isComplete && (
+        <span className="material-complete-check" role="img" aria-label="Enough in inventory">
+          ✓
+        </span>
       )}
       <span className="sr-only">{name}</span>
     </span>
   );
+
+  const openAction = onOpenInventoryItem ?? onChooseClassManual;
+
+  return openAction ? (
+    <button
+      className="requirement-tile-icon-button"
+      type="button"
+      onClick={openAction}
+      aria-label={onChooseClassManual ? `Choose class for ${name}` : `Edit ${name} in inventory`}
+      title={onChooseClassManual ? `Choose class for ${name}` : `Edit ${name} in inventory`}
+    >
+      {art}
+    </button>
+  ) : art;
 }
 
-function MaterialTile({ item }: { item: MaterialRequirement }) {
-  const shortName = shortMaterialName(item.id, item.name);
+function MaterialTile({
+  item,
+  onOpenInventoryItem,
+  onChooseClassManual,
+}: {
+  item: MaterialRequirement;
+  onOpenInventoryItem: (materialId: string) => void;
+  onChooseClassManual: (tier: ManualTierId) => void;
+}) {
+  const manualTier = item.id.match(/^class-manual-(i|ii|iii)$/)?.[1] as ManualTierId | undefined;
   const countDescription = item.inventoryTracked
     ? `${numberFormat.format(item.remaining)} needed; ${numberFormat.format(item.owned)} owned of ${numberFormat.format(item.required)} total`
     : `${numberFormat.format(item.required)} needed; class-specific inventory not matched`;
 
   return (
     <article className="requirement-tile" role="group" aria-label={`${item.name}. ${countDescription}`} title={item.name}>
-      <MaterialIcon id={item.id} name={item.name} />
-      <strong className="requirement-tile-name">{shortName}</strong>
+      <MaterialIcon
+        id={item.id}
+        name={item.name}
+        onOpenInventoryItem={
+          item.inventoryTracked && materialCatalogById.has(item.id)
+            ? () => onOpenInventoryItem(item.id)
+            : undefined
+        }
+        onChooseClassManual={manualTier ? () => onChooseClassManual(manualTier) : undefined}
+        isComplete={item.inventoryTracked && item.remaining === 0}
+      />
       <span className={`requirement-tile-needed${item.remaining === 0 ? " is-covered" : ""}`}>
         {item.inventoryTracked
           ? `${numberFormat.format(item.remaining)} needed`
@@ -93,8 +114,17 @@ function MaterialTile({ item }: { item: MaterialRequirement }) {
 export function MaterialsSummary({
   activePlanCount,
   requirements,
+  onOpenInventoryItem,
 }: MaterialsSummaryProps) {
+  const [manualTierToChoose, setManualTierToChoose] = useState<ManualTierId | null>(null);
+  const manualTierNames: Record<ManualTierId, string> = {
+    i: "Common",
+    ii: "Advanced",
+    iii: "Premium",
+  };
+
   return (
+    <>
     <aside className="panel materials-panel" aria-labelledby="materials-heading">
       <div className="panel-heading">
         <div>
@@ -120,10 +150,64 @@ export function MaterialsSummary({
       ) : (
         <div className="requirements-grid">
           {requirements.map((item) => (
-            <MaterialTile key={item.id} item={item} />
+            <MaterialTile
+              key={item.id}
+              item={item}
+              onOpenInventoryItem={onOpenInventoryItem}
+              onChooseClassManual={setManualTierToChoose}
+            />
           ))}
         </div>
       )}
     </aside>
+    {manualTierToChoose && (
+      <div
+        className="inventory-modal-backdrop"
+        role="presentation"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setManualTierToChoose(null);
+        }}
+      >
+        <section
+          className="inventory-amount-dialog inventory-manual-picker-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="manual-picker-title"
+        >
+          <header className="inventory-amount-header">
+            <h2 id="manual-picker-title">Choose a class for the {manualTierNames[manualTierToChoose]} Manual</h2>
+            <button
+              className="icon-button inventory-dialog-close"
+              type="button"
+              onClick={() => setManualTierToChoose(null)}
+              aria-label="Close class picker"
+            >
+              ×
+            </button>
+          </header>
+          <div className="inventory-manual-picker-grid">
+            {manualCatalogItems
+              .filter((material) => material.id.startsWith(`class-manual-${manualTierToChoose}-`))
+              .map((material) => (
+                <button
+                  className="inventory-material-tile"
+                  key={material.id}
+                  type="button"
+                  onClick={() => {
+                    setManualTierToChoose(null);
+                    onOpenInventoryItem(material.id);
+                  }}
+                >
+                  <span className="inventory-material-image">
+                    {material.image && <img src={materialImageSource(material.image)} alt="" />}
+                  </span>
+                  <strong className="inventory-material-name">{material.name}</strong>
+                </button>
+              ))}
+          </div>
+        </section>
+      </div>
+    )}
+    </>
   );
 }

@@ -4,7 +4,7 @@ const gachaCharacterUrl = (name: string) =>
   `https://www.gacha.gg/chaos-zero-nightmare/characters/${name}`;
 
 function units(amount: number) {
-  return { id: "credits", name: "Credits / Units", amount };
+  return { id: "credits", name: "Units", amount };
 }
 
 function growthStone(
@@ -16,7 +16,7 @@ function growthStone(
   const tierId = tier.toLowerCase();
   return {
     id: `growth-${tierId}-${attributeId}`,
-    name: `${tier} Growth Stone of ${attribute}`,
+    name: `${tier} Growth Stone of ${attribute === "Void" ? "the Void" : attribute}`,
     amount,
   };
 }

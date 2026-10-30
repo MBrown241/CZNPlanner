@@ -5,6 +5,7 @@ import {
   xpPerLevel,
 } from "../data/progression";
 import type { ManualTier } from "../data/progression";
+import { getClassManualId, materialCatalog } from "../data/materials";
 import { potentialProfiles } from "../data/potentials";
 import { calculatePotentialCost, getPotentialProgress } from "./potentialCosts";
 import type {
@@ -57,15 +58,15 @@ export function calculatePlanCost(currentLevel: number, targetLevel: number): Pl
 }
 
 const XP_RESOURCE_INFO = [
-  { id: "xp-gray", name: "Gray XP manual (100 XP)", key: "gray" as const },
-  { id: "xp-blue", name: "Blue XP manual (500 XP)", key: "blue" as const },
-  { id: "xp-gold", name: "Gold XP manual (2,000 XP)", key: "gold" as const },
+  { id: "xp-gray", name: "Basic Battle Memory (100 XP)", key: "gray" as const },
+  { id: "xp-blue", name: "Advanced Battle Memory (500 XP)", key: "blue" as const },
+  { id: "xp-gold", name: "Premium Battle Memory (2,000 XP)", key: "gold" as const },
 ];
 
 const CLASS_RESOURCE_INFO = [
-  { id: "class-manual-i", name: "Class Manual I", tier: "I" as const },
-  { id: "class-manual-ii", name: "Class Manual II", tier: "II" as const },
-  { id: "class-manual-iii", name: "Class Manual III", tier: "III" as const },
+  { id: "class-manual-i", name: "Common Class Manual", tier: "I" as const },
+  { id: "class-manual-ii", name: "Advanced Class Manual", tier: "II" as const },
+  { id: "class-manual-iii", name: "Premium Class Manual", tier: "III" as const },
 ];
 
 export function calculateRequirements(
@@ -82,15 +83,16 @@ export function calculateRequirements(
 
   for (const plan of activePlans) {
     const cost = calculatePlanCost(plan.currentLevel, plan.targetLevel);
+    const character = characters.find((item) => item.id === plan.characterId);
     for (const resource of XP_RESOURCE_INFO) {
       totals[resource.id] = (totals[resource.id] ?? 0) + cost.xpManuals[resource.key];
     }
     totals.credits = (totals.credits ?? 0) + cost.levelCredits + cost.promotionCredits;
     for (const resource of CLASS_RESOURCE_INFO) {
-      totals[resource.id] = (totals[resource.id] ?? 0) + cost.manuals[resource.tier];
+      const manualId = getClassManualId(resource.tier, character?.combatClass);
+      totals[manualId] = (totals[manualId] ?? 0) + cost.manuals[resource.tier];
     }
 
-    const character = characters.find((item) => item.id === plan.characterId);
     const profileId = character?.potentialProfileId ?? plan.characterId;
     const profile = potentialProfiles[profileId];
     for (const node of profile?.nodes ?? []) {
@@ -117,7 +119,10 @@ export function calculateRequirements(
     [
       ...XP_RESOURCE_INFO.map(({ id, name }) => ({ id, name, inventoryTracked: true })),
       ...CLASS_RESOURCE_INFO.map(({ id, name }) => ({ id, name, inventoryTracked: false })),
-      { id: "credits", name: "Credits / Units", inventoryTracked: true },
+      ...materialCatalog
+        .filter(({ category }) => category === "Class Manuals")
+        .map(({ id, name }) => ({ id, name, inventoryTracked: true })),
+      { id: "credits", name: "Units", inventoryTracked: true },
     ].map((resource) => [resource.id, resource] as const),
   );
   for (const resource of potentialResources.values()) {

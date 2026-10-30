@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef } from "react";
 import { CharacterPlanCard } from "./CharacterPlanCard";
 import { MaterialsSummary } from "./MaterialsSummary";
 import { calculateRequirements } from "../lib/calculator";
@@ -11,7 +11,7 @@ type PlannerPageProps = {
   onAddCharacter: (characterId: string) => void;
   onUpdatePlan: (characterId: string, updates: Partial<CharacterPlan>) => void;
   onRemovePlan: (characterId: string) => void;
-  onManageInventory: () => void;
+  onReorderPlans: (draggedId: string, targetId: string) => void;
 };
 
 export function PlannerPage({
@@ -21,12 +21,9 @@ export function PlannerPage({
   onAddCharacter,
   onUpdatePlan,
   onRemovePlan,
-  onManageInventory,
+  onReorderPlans,
 }: PlannerPageProps) {
-  const [isAddingCharacter, setIsAddingCharacter] = useState(false);
-  const [selectedCharacterId, setSelectedCharacterId] = useState(
-    characters[0]?.id ?? "",
-  );
+  const characterPickerRef = useRef<HTMLDialogElement>(null);
   const plannedCharacterIds = useMemo(
     () => new Set(plans.map((plan) => plan.characterId)),
     [plans],
@@ -40,30 +37,21 @@ export function PlannerPage({
     [plans, inventory, characters],
   );
 
-  function addSelectedCharacter() {
-    if (!availableCharacters.some((item) => item.id === selectedCharacterId)) {
-      return;
-    }
+  function addCharacter(characterId: string) {
+    if (!availableCharacters.some((item) => item.id === characterId)) return;
 
-    onAddCharacter(selectedCharacterId);
-    setSelectedCharacterId(
-      availableCharacters.find((item) => item.id !== selectedCharacterId)?.id ?? "",
-    );
-    setIsAddingCharacter(false);
+    onAddCharacter(characterId);
+    characterPickerRef.current?.close();
   }
 
   function showAddCharacterPanel() {
-    if (availableCharacters[0]) {
-      setSelectedCharacterId(availableCharacters[0].id);
-      setIsAddingCharacter(true);
-    }
+    if (availableCharacters.length > 0) characterPickerRef.current?.showModal();
   }
 
   return (
-    <main className="page-content">
+    <main className="page-content planner-page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">YOUR UPGRADE WORKSPACE</p>
           <h1>Character planner</h1>
           <p className="page-description">
             Plan level upgrades using the shared 4-star and 5-star cost assumption.
@@ -72,89 +60,69 @@ export function PlannerPage({
         <button
           className="button button-primary"
           type="button"
-          onClick={() =>
-            isAddingCharacter ? setIsAddingCharacter(false) : showAddCharacterPanel()
-          }
+          onClick={showAddCharacterPanel}
           disabled={availableCharacters.length === 0}
         >
           <span aria-hidden="true">＋</span> Add character
         </button>
       </div>
 
-      <div className="summary-grid" aria-label="Planner summary">
-        <div className="summary-card">
-          <span className="summary-icon purple" aria-hidden="true">
-            ✦
-          </span>
-          <div>
-            <span className="summary-label">Character plans</span>
-            <strong>{plans.length}</strong>
-          </div>
-        </div>
-        <div className="summary-card">
-          <span className="summary-icon green" aria-hidden="true">
-            ●
-          </span>
-          <div>
-            <span className="summary-label">Active plans</span>
-            <strong>{activePlanCount}</strong>
-          </div>
-        </div>
-        <div className="summary-card summary-card-wide">
-          <span className="summary-icon amber" aria-hidden="true">
-            ◈
-          </span>
-          <div>
-            <span className="summary-label">Game data status</span>
-            <strong className="summary-status">Entered · verify in game</strong>
-          </div>
-        </div>
-      </div>
+      <MaterialsSummary
+        activePlanCount={activePlanCount}
+        requirements={requirements}
+      />
 
-      {isAddingCharacter && availableCharacters.length > 0 && (
-        <section className="add-panel" aria-labelledby="add-character-title">
+      <dialog className="potential-dialog character-picker-dialog" ref={characterPickerRef}>
+        <header className="potential-dialog-header">
           <div>
-            <h2 id="add-character-title">Add a character plan</h2>
-            <p>Includes placeholders and Potential cost examples for Mika and Renoa.</p>
+            <h3>Add a character plan</h3>
+            <p>Choose a character to add</p>
           </div>
-          <div className="add-controls">
-            <label className="visually-hidden" htmlFor="character-select">
-              Select a character
-            </label>
-            <select
-              id="character-select"
-              value={selectedCharacterId}
-              onChange={(event) => setSelectedCharacterId(event.target.value)}
-            >
-              {availableCharacters.map((character) => (
-                <option key={character.id} value={character.id}>
-                  {character.name}
-                </option>
-              ))}
-            </select>
+          <button
+            className="potential-dialog-close"
+            type="button"
+            aria-label="Close character picker"
+            onClick={() => characterPickerRef.current?.close()}
+          >
+            <span className="potential-dialog-close-icon" aria-hidden="true" />
+          </button>
+        </header>
+        <div className="character-picker-list">
+          {availableCharacters.map((character) => (
             <button
-              className="button button-primary"
+              className="character-picker-card"
+              key={character.id}
               type="button"
-              onClick={addSelectedCharacter}
+              onClick={() => addCharacter(character.id)}
             >
-              Add plan
+              <span className="character-picker-icon" aria-hidden="true">
+                <span>{character.name.slice(0, 1).toUpperCase()}</span>
+                {character.portraitUrl && (
+                  <img
+                    src={character.portraitUrl}
+                    alt=""
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
+              </span>
+              <span className="character-picker-name">{character.name}</span>
+              {(character.rarity || character.combatClass || character.attribute) && (
+                <span className="character-picker-meta">
+                  {[character.rarity && `${character.rarity}-star`, character.combatClass, character.attribute]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              )}
             </button>
-            <button
-              className="button button-quiet"
-              type="button"
-              onClick={() => setIsAddingCharacter(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </section>
-      )}
+          ))}
+        </div>
+      </dialog>
 
-      <div className="dashboard-grid">
-        <section className="panel plans-panel" aria-labelledby="plans-heading">
+      <section className="panel plans-panel" aria-labelledby="plans-heading">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">YOUR ROSTER</p>
               <h2 id="plans-heading">Character plans</h2>
             </div>
             <span className="count-pill">{plans.length} total</span>
@@ -190,19 +158,13 @@ export function PlannerPage({
                     plan={plan}
                     onUpdate={onUpdatePlan}
                     onRemove={onRemovePlan}
+                    onReorder={onReorderPlans}
                   />
                 );
               })}
             </div>
           )}
-        </section>
-
-        <MaterialsSummary
-          activePlanCount={activePlanCount}
-          requirements={requirements}
-          onManageInventory={onManageInventory}
-        />
-      </div>
+      </section>
     </main>
   );
 }

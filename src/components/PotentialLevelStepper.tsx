@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
+
 type PotentialLevelStepperProps = {
   label: string;
   value: number;
   minimum?: number;
   maximum: number;
-  valueText?: string;
+  disabled?: boolean;
   onChange: (nextValue: number) => void;
 };
 
@@ -12,9 +14,39 @@ export function PotentialLevelStepper({
   value,
   minimum = 0,
   maximum,
-  valueText,
+  disabled = false,
   onChange,
 }: PotentialLevelStepperProps) {
+  const [inputValue, setInputValue] = useState(String(value));
+
+  useEffect(() => {
+    setInputValue(String(value));
+  }, [value]);
+
+  function updateFromInput(rawValue: string) {
+    setInputValue(rawValue);
+    if (rawValue === "") return;
+
+    const parsedValue = Number(rawValue);
+    if (!Number.isInteger(parsedValue)) return;
+
+    const nextValue = Math.min(maximum, Math.max(minimum, parsedValue));
+    onChange(nextValue);
+    if (nextValue !== parsedValue) setInputValue(String(nextValue));
+  }
+
+  function restoreValidValue() {
+    const parsedValue = Number(inputValue);
+    if (inputValue === "" || !Number.isInteger(parsedValue)) {
+      setInputValue(String(value));
+      return;
+    }
+
+    const nextValue = Math.min(maximum, Math.max(minimum, parsedValue));
+    setInputValue(String(nextValue));
+    if (nextValue !== value) onChange(nextValue);
+  }
+
   return (
     <div className="potential-stepper">
       <span>{label}</span>
@@ -22,16 +54,26 @@ export function PotentialLevelStepper({
         <button
           type="button"
           aria-label={`Decrease ${label.toLowerCase()} level`}
-          disabled={value <= minimum}
+          disabled={disabled || value <= minimum}
           onClick={() => onChange(Math.max(minimum, value - 1))}
         >
           &minus;
         </button>
-        <output aria-live="polite">{valueText ?? value}</output>
+        <input
+          type="number"
+          min={minimum}
+          max={maximum}
+          step="1"
+          value={inputValue}
+          disabled={disabled}
+          aria-label={`${label} level`}
+          onChange={(event) => updateFromInput(event.currentTarget.value)}
+          onBlur={restoreValidValue}
+        />
         <button
           type="button"
           aria-label={`Increase ${label.toLowerCase()} level`}
-          disabled={value >= maximum}
+          disabled={disabled || value >= maximum}
           onClick={() => onChange(Math.min(maximum, value + 1))}
         >
           +

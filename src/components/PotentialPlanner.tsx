@@ -36,6 +36,37 @@ export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlanner
     return progress.targetLevel > progress.currentLevel;
   }).length;
   const selectedNode = profile.nodes.find((node) => node.id === selectedNodeId) ?? firstNode;
+  const connections = profile.connections ?? [];
+  const getProgressFor = (nodeId: string) => {
+    const node = profile.nodes.find((item) => item.id === nodeId);
+    return node
+      ? getPotentialProgress(plan, node)
+      : { currentLevel: 0, targetLevel: 0 };
+  };
+  const isNodeUnlocked = (
+    nodeId: string,
+    progressByNode: Record<string, PotentialProgress>,
+    visited = new Set<string>(),
+  ) => {
+    if (visited.has(nodeId)) return false;
+    const nextVisited = new Set(visited).add(nodeId);
+    const parents = connections.filter(([, childId]) => childId === nodeId);
+    return (
+      parents.length === 0 ||
+      parents.some(([parentId]) => {
+        const parentProgress = progressByNode[parentId] ?? getProgressFor(parentId);
+        return (
+          (parentProgress.currentLevel > 0 || parentProgress.targetLevel > 0) &&
+          isNodeUnlocked(parentId, progressByNode, nextVisited)
+        );
+      })
+    );
+  };
+  const unlockedNodeIds = new Set(
+    profile.nodes
+      .filter((node) => isNodeUnlocked(node.id, draft))
+      .map((node) => node.id),
+  );
 
   function openPlanner() {
     const initialProgress = Object.fromEntries(
@@ -51,21 +82,29 @@ export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlanner
   }
 
   function updateDraft(nodeId: string, field: keyof PotentialProgress, value: number) {
-    setDraft((current) => {
-      const progress = current[nodeId] ?? { currentLevel: 0, targetLevel: 0 };
-      const updated = { ...progress, [field]: value };
-      if (updated.currentLevel > updated.targetLevel) updated.targetLevel = updated.currentLevel;
-      if (updated.targetLevel < updated.currentLevel) updated.currentLevel = updated.targetLevel;
-      return { ...current, [nodeId]: updated };
-    });
-  }
-
-  function savePlanner() {
+    const node = profile.nodes.find((item) => item.id === nodeId);
+    if (!node || !isNodeUnlocked(nodeId, draft)) return;
+    const progress = draft[nodeId] ?? getPotentialProgress(plan, node);
+    const updated = { ...progress, [field]: value };
+    if (updated.currentLevel > updated.targetLevel) updated.targetLevel = updated.currentLevel;
+    if (updated.targetLevel < updated.currentLevel) updated.currentLevel = updated.targetLevel;
+    const nextDraft = { ...draft, [nodeId]: updated };
+    for (const connectedNode of profile.nodes) {
+      if (!isNodeUnlocked(connectedNode.id, nextDraft)) {
+        const connectedProgress = nextDraft[connectedNode.id] ?? getProgressFor(connectedNode.id);
+        if (connectedProgress.targetLevel > connectedProgress.currentLevel) {
+          nextDraft[connectedNode.id] = {
+            ...connectedProgress,
+            targetLevel: connectedProgress.currentLevel,
+          };
+        }
+      }
+    }
+    setDraft(nextDraft);
     onUpdate(character.id, {
-      potentialProgress: draft,
+      potentialProgress: nextDraft,
       potentialTargets: undefined,
     });
-    dialogRef.current?.close();
   }
 
   return (
@@ -87,7 +126,7 @@ export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlanner
             aria-label="Close potential planner"
             onClick={() => dialogRef.current?.close()}
           >
-            &times;
+            <span className="potential-dialog-close-icon" aria-hidden="true" />
           </button>
         </header>
 
@@ -95,8 +134,9 @@ export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlanner
           <div className="potential-map-scroll">
             <PotentialTreeMap
               nodes={profile.nodes}
-              connections={profile.connections ?? []}
+              connections={connections}
               progress={draft}
+              unlockedNodeIds={unlockedNodeIds}
               selectedNodeId={selectedNode.id}
               onSelect={setSelectedNodeId}
             />
@@ -104,30 +144,11 @@ export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlanner
           <PotentialNodeDetails
             node={selectedNode}
             progress={draft[selectedNode.id] ?? { currentLevel: 0, targetLevel: 0 }}
+            isUnlocked={unlockedNodeIds.has(selectedNode.id)}
             onChange={(field, value) => updateDraft(selectedNode.id, field, value)}
           />
         </main>
 
-        <footer className="potential-dialog-footer">
-          <button
-            className="potential-cancel-button"
-            type="button"
-            aria-label="Cancel without saving"
-            title="Cancel"
-            onClick={() => dialogRef.current?.close()}
-          >
-            &times;
-          </button>
-          <button
-            className="potential-save-button"
-            type="button"
-            aria-label="Save potential plan"
-            title="Save"
-            onClick={savePlanner}
-          >
-            &#10003;
-          </button>
-        </footer>
       </dialog>
     </section>
   );

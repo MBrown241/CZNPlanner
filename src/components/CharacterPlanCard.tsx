@@ -1,5 +1,7 @@
+import { useRef, useState } from "react";
 import type { Character, CharacterPlan } from "../types";
 import { PlanCostSummary } from "./PlanCostSummary";
+import { PotentialCostSummary } from "./PotentialCostSummary";
 import { PotentialPlanner } from "./PotentialPlanner";
 
 type CharacterPlanCardProps = {
@@ -7,6 +9,7 @@ type CharacterPlanCardProps = {
   plan: CharacterPlan;
   onUpdate: (characterId: string, updates: Partial<CharacterPlan>) => void;
   onRemove: (characterId: string) => void;
+  onReorder: (draggedId: string, targetId: string) => void;
 };
 
 export function CharacterPlanCard({
@@ -14,12 +17,118 @@ export function CharacterPlanCard({
   plan,
   onUpdate,
   onRemove,
+  onReorder,
 }: CharacterPlanCardProps) {
+  const [loadedPortrait, setLoadedPortrait] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragGesture = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    holdTimer: number;
+    isActive: boolean;
+  } | null>(null);
+  const portraitLoaded = loadedPortrait === character.portraitUrl;
+
+  function clearDragGesture() {
+    const gesture = dragGesture.current;
+    if (!gesture) return;
+
+    window.clearTimeout(gesture.holdTimer);
+    document
+      .querySelectorAll(".plan-card.is-drop-target")
+      .forEach((card) => card.classList.remove("is-drop-target"));
+    document.body.classList.remove("is-plan-reordering");
+    dragGesture.current = null;
+    setIsDragging(false);
+  }
+
   return (
-    <article className="plan-card">
-      <div className="plan-card-top">
+    <article
+      className={`plan-card${isDragging ? " is-dragging" : ""}`}
+      data-plan-id={plan.characterId}
+    >
+      <div
+        className="plan-card-top"
+        onPointerDown={(event) => {
+          if (!event.isPrimary || event.button !== 0) return;
+          if (
+            (event.target as HTMLElement).closest(
+              "button, input, select, textarea, label, a, [contenteditable='true']",
+            )
+          ) {
+            return;
+          }
+
+          const header = event.currentTarget;
+          header.setPointerCapture(event.pointerId);
+          const gesture = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            holdTimer: 0,
+            isActive: false,
+          };
+          gesture.holdTimer = window.setTimeout(() => {
+            if (dragGesture.current !== gesture) return;
+            gesture.isActive = true;
+            setIsDragging(true);
+            document.body.classList.add("is-plan-reordering");
+          }, 220);
+          dragGesture.current = gesture;
+        }}
+        onPointerMove={(event) => {
+          const gesture = dragGesture.current;
+          if (!gesture || gesture.pointerId !== event.pointerId) return;
+
+          if (!gesture.isActive) {
+            const moved =
+              Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) > 8;
+            if (moved) clearDragGesture();
+            return;
+          }
+
+          document
+            .querySelectorAll(".plan-card.is-drop-target")
+            .forEach((card) => card.classList.remove("is-drop-target"));
+          const target = document
+            .elementFromPoint(event.clientX, event.clientY)
+            ?.closest<HTMLElement>(".plan-card[data-plan-id]");
+          if (target && target.dataset.planId !== plan.characterId) {
+            target.classList.add("is-drop-target");
+          }
+        }}
+        onPointerUp={(event) => {
+          const gesture = dragGesture.current;
+          if (!gesture || gesture.pointerId !== event.pointerId) return;
+
+          const target = gesture.isActive
+            ? document
+                .elementFromPoint(event.clientX, event.clientY)
+                ?.closest<HTMLElement>(".plan-card[data-plan-id]")
+            : null;
+          clearDragGesture();
+          if (target?.dataset.planId) {
+            onReorder(plan.characterId, target.dataset.planId);
+          }
+        }}
+        onPointerCancel={clearDragGesture}
+        onLostPointerCapture={clearDragGesture}
+      >
         <div className="character-avatar" aria-hidden="true">
-          {character.name.slice(-1)}
+          <span className={portraitLoaded ? "is-hidden" : ""}>
+            {character.name.slice(0, 1).toUpperCase()}
+          </span>
+          {character.portraitUrl && (
+            <img
+              src={character.portraitUrl}
+              alt=""
+              onLoad={() => setLoadedPortrait(character.portraitUrl ?? null)}
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
+          )}
         </div>
         <div className="character-info">
           <h3>{character.name}</h3>
@@ -84,14 +193,12 @@ export function CharacterPlanCard({
         </label>
       </div>
 
-      <PlanCostSummary plan={plan} />
+      <PlanCostSummary character={character} plan={plan} />
+      <PotentialCostSummary character={character} plan={plan} />
 
-      <div className="pending-data-grid">
-        <div>
-          <span className="pending-label">Promotions</span>
-          <strong className="data-included">Tier costs included</strong>
-        </div>
-      </div>
+      <p className="promotion-status">
+        <span className="status-dot green-dot" /> Promotions included
+      </p>
 
       <PotentialPlanner
         character={character}
@@ -100,7 +207,7 @@ export function CharacterPlanCard({
       />
 
       <div className="plan-card-footer">
-        <span className="demo-note">Unverified demo record</span>
+        <span className="demo-note">Demo data</span>
         <button
           className="text-button danger-text"
           type="button"

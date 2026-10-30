@@ -5,6 +5,7 @@ import { PotentialLevelStepper } from "./PotentialLevelStepper";
 type PotentialNodeDetailsProps = {
   node: PotentialNode;
   progress: PotentialProgress;
+  isUnlocked: boolean;
   onChange: (field: keyof PotentialProgress, value: number) => void;
 };
 
@@ -18,9 +19,8 @@ function shortName(name: string) {
     .replace(/^(Common|Great|Premium) (.+)$/, "$1 $2 Growth Stones");
 }
 
-export function PotentialNodeDetails({ node, progress, onChange }: PotentialNodeDetailsProps) {
+export function PotentialNodeDetails({ node, progress, isUnlocked, onChange }: PotentialNodeDetailsProps) {
   const cap = node.rankCap ?? 1;
-  const oneTimeNode = !node.rankCap;
   const plannedCost = calculatePotentialCost(node, progress.currentLevel, progress.targetLevel);
 
   return (
@@ -34,7 +34,7 @@ export function PotentialNodeDetails({ node, progress, onChange }: PotentialNode
           label="Current"
           value={progress.currentLevel}
           maximum={cap}
-          valueText={oneTimeNode ? (progress.currentLevel === 1 ? "Yes" : "No") : undefined}
+          disabled={!isUnlocked}
           onChange={(value) => onChange("currentLevel", value)}
         />
         <PotentialLevelStepper
@@ -42,14 +42,16 @@ export function PotentialNodeDetails({ node, progress, onChange }: PotentialNode
           value={progress.targetLevel}
           minimum={progress.currentLevel}
           maximum={cap}
-          valueText={oneTimeNode ? (progress.targetLevel === 1 ? "Yes" : "No") : undefined}
+          disabled={!isUnlocked}
           onChange={(value) => onChange("targetLevel", value)}
         />
       </div>
 
       <div className="potential-detail-cost">
         <span>Required for this upgrade</span>
-        {progress.targetLevel <= progress.currentLevel ? (
+        {!isUnlocked ? (
+          <strong>Unlock a connected node first</strong>
+        ) : progress.targetLevel <= progress.currentLevel ? (
           <strong>Already at desired level</strong>
         ) : plannedCost.costs.length > 0 ? (
           <ul>
@@ -62,7 +64,7 @@ export function PotentialNodeDetails({ node, progress, onChange }: PotentialNode
         ) : (
           <strong>Cost not recorded</strong>
         )}
-        {!plannedCost.complete && progress.targetLevel > progress.currentLevel && (
+        {isUnlocked && !plannedCost.complete && progress.targetLevel > progress.currentLevel && (
           <small>Partial total; some rank costs are not recorded.</small>
         )}
       </div>

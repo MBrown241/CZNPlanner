@@ -4,6 +4,7 @@ type PotentialTreeMapProps = {
   nodes: PotentialNode[];
   connections: [string, string][];
   progress: Record<string, PotentialProgress>;
+  unlockedNodeIds: Set<string>;
   selectedNodeId: string;
   onSelect: (nodeId: string) => void;
 };
@@ -12,6 +13,7 @@ export function PotentialTreeMap({
   nodes,
   connections,
   progress,
+  unlockedNodeIds,
   selectedNodeId,
   onSelect,
 }: PotentialTreeMapProps) {
@@ -60,6 +62,7 @@ export function PotentialTreeMap({
         const selected = node.id === selectedNodeId;
         const completed = nodeProgress.currentLevel > 0;
         const planned = nodeProgress.targetLevel > nodeProgress.currentLevel;
+        const unlocked = unlockedNodeIds.has(node.id);
         const levelText = node.rankCap
           ? `${nodeProgress.targetLevel}/${cap}`
           : nodeProgress.targetLevel > 0
@@ -70,16 +73,16 @@ export function PotentialTreeMap({
 
         return (
           <button
-            className={`potential-map-node${selected ? " is-selected" : ""}${completed ? " is-complete" : ""}${planned ? " is-planned" : ""}`}
+            className={`potential-map-node${levelText ? " has-level" : ""}${selected ? " is-selected" : ""}${completed ? " is-complete" : ""}${planned ? " is-planned" : ""}${unlocked ? "" : " is-locked"}`}
             key={node.id}
             type="button"
             aria-pressed={selected}
-            aria-label={`${node.name}, ${node.rankCap ? `desired level ${nodeProgress.targetLevel} of ${cap}, current level ${nodeProgress.currentLevel}` : nodeProgress.targetLevel > 0 ? "planned" : completed ? "unlocked" : "not unlocked"}`}
+            aria-label={`${node.name}, ${unlocked ? "unlocked" : "locked"}, ${node.rankCap ? `desired level ${nodeProgress.targetLevel} of ${cap}, current level ${nodeProgress.currentLevel}` : nodeProgress.targetLevel > 0 ? "planned" : completed ? "unlocked" : "not unlocked"}`}
             style={{ left: `${position.x}%`, top: `${position.y}%` }}
             onClick={() => onSelect(node.id)}
           >
             <span className="potential-map-node-circle">
-              <span aria-hidden="true">{node.rankCap ? "\u2727" : "\u25c7"}</span>
+              <span aria-hidden="true">&#9671;</span>
             </span>
             {levelText && <span className="potential-map-node-level">{levelText}</span>}
             <span className="potential-map-node-name">{node.name}</span>

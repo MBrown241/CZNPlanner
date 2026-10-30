@@ -18,3 +18,10 @@ https://game8.co/games/Chaos-Zero-Nightmare/archives/560783
 | eye-of-wailing-prodigal.png | Eye of Wailing Prodigal |
 | shards-of-condemnation.png | Shards of Condemnation |
 | undetermined-ego-crystal.png | Undetermined Ego Crystal |
+| class-manual-i-hunter.png | Common Hunter Manual |
+| class-manual-ii-hunter.png | Advanced Hunter Manual |
+| class-manual-iii-hunter.png | Premium Hunter Manual |
+| class-manual-i-controller.png | Common Controller Manual |
+| class-manual-ii-controller.png | Advanced Controller Manual |
+
+Class manual images are individual item icons from the same Game8 index. The Premium Controller Manual icon is not included yet, so that tile uses a tier marker until its icon is available.

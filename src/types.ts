@@ -4,6 +4,7 @@ export type Character = {
   rarity?: 4 | 5;
   combatClass?: string;
   attribute?: GrowthAttribute;
+  portraitUrl?: string;
   potentialProfileId?: string;
 };
 

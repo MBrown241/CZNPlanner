@@ -51,7 +51,6 @@ export function InventoryPage({
     <main className="page-content">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">SHARED PLAYER DATA</p>
           <h1>Material inventory</h1>
           <p className="page-description">
             Track owned quantities in one place for all your character plans.
@@ -65,7 +64,6 @@ export function InventoryPage({
       <section className="panel inventory-panel" aria-labelledby="inventory-heading">
         <div className="panel-heading inventory-panel-heading">
           <div>
-            <p className="eyebrow">YOUR MATERIALS</p>
             <h2 id="inventory-heading">Shared inventory</h2>
           </div>
           <span className="count-pill">{inventory.length} items</span>

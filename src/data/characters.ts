@@ -19,6 +19,8 @@ export const characters: Character[] = [
     rarity: 5,
     combatClass: "Hunter",
     attribute: "Void",
+    portraitUrl:
+      "https://www.gacha.gg/_next/image?q=75&url=%2Fimg%2Fchaos-zero-nightmare%2Fdm%2Fchars%2Frenoa-action.webp&w=384",
     potentialProfileId: "renoa",
   },
 ];

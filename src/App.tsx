@@ -58,6 +58,18 @@ function App() {
     );
   }
 
+  function reorderPlans(draggedId: string, targetId: string) {
+    const draggedIndex = plans.findIndex((plan) => plan.characterId === draggedId);
+    const targetIndex = plans.findIndex((plan) => plan.characterId === targetId);
+    if (draggedIndex < 0 || targetIndex < 0 || draggedIndex === targetIndex) return;
+
+    const nextPlans = [...plans];
+    const [draggedPlan] = nextPlans.splice(draggedIndex, 1);
+    if (!draggedPlan) return;
+    nextPlans.splice(targetIndex, 0, draggedPlan);
+    persistPlans(nextPlans);
+  }
+
   function removePlan(characterId: string) {
     persistPlans(plans.filter((plan) => plan.characterId !== characterId));
   }
@@ -105,7 +117,7 @@ function App() {
           onAddCharacter={addCharacter}
           onUpdatePlan={updatePlan}
           onRemovePlan={removePlan}
-          onManageInventory={() => setPage("inventory")}
+          onReorderPlans={reorderPlans}
         />
       ) : (
         <InventoryPage

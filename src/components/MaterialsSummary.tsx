@@ -4,7 +4,6 @@ import type { MaterialRequirement } from "../types";
 type MaterialsSummaryProps = {
   activePlanCount: number;
   requirements: MaterialRequirement[];
-  onManageInventory: () => void;
 };
 
 const numberFormat = new Intl.NumberFormat();
@@ -94,13 +93,11 @@ function MaterialTile({ item }: { item: MaterialRequirement }) {
 export function MaterialsSummary({
   activePlanCount,
   requirements,
-  onManageInventory,
 }: MaterialsSummaryProps) {
   return (
     <aside className="panel materials-panel" aria-labelledby="materials-heading">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">SHARED REQUIREMENTS</p>
           <h2 id="materials-heading">Materials needed</h2>
         </div>
         <span className="material-symbol" aria-hidden="true">
@@ -121,30 +118,12 @@ export function MaterialsSummary({
           </p>
         </div>
       ) : (
-        <>
-          <div className="requirements-grid">
-            {requirements.map((item) => (
-              <MaterialTile key={item.id} item={item} />
-            ))}
-          </div>
-          <p className="requirements-note">
-            XP manuals use the fewest manuals possible. Class Manual I, II, and III totals
-            are combined across the demo roster; class matching is pending.
-          </p>
-        </>
+        <div className="requirements-grid">
+          {requirements.map((item) => (
+            <MaterialTile key={item.id} item={item} />
+          ))}
+        </div>
       )}
-
-      <div className="requirements-footnote">
-        <span className="status-dot amber-dot" />
-        {activePlanCount} active {activePlanCount === 1 ? "plan" : "plans"} included
-      </div>
-      <button
-        className="text-button inventory-link"
-        type="button"
-        onClick={onManageInventory}
-      >
-        Manage shared inventory <span aria-hidden="true">&#8594;</span>
-      </button>
     </aside>
   );
 }

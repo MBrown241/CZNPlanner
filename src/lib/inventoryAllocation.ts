@@ -1,15 +1,22 @@
 import { getClassManualId, materialCatalogById } from "../data/materials";
 import { potentialProfiles } from "../data/potentials";
 import { calculatePlanCost } from "./calculator";
+import { getConvertibleMaterial, getInventoryBaseUnits } from "./materialConversions";
 import { calculatePotentialCost, getPotentialProgress } from "./potentialCosts";
 import type { Character, CharacterPlan, InventoryItem } from "../types";
 
-/** Allocates shared inventory to active plans in their displayed order. */
+export type PlanInventoryAllocation = {
+  completedByCharacter: Map<string, Set<string>>;
+  /** Hypothetical tier conversions, kept separate from owned counts and completion. */
+  convertibleByCharacter: Map<string, Map<string, number>>;
+};
+
+/** Allocates exact inventory to active plans in displayed order; conversion hints are informational. */
 export function allocateInventoryByPlan(
   plans: CharacterPlan[],
   inventory: InventoryItem[],
   characters: Character[],
-) {
+): PlanInventoryAllocation {
   const remainingByMaterial = new Map<string, number>();
   for (const item of inventory) {
     remainingByMaterial.set(
@@ -17,12 +24,15 @@ export function allocateInventoryByPlan(
       (remainingByMaterial.get(item.materialId) ?? 0) + item.owned,
     );
   }
-
-  const completionByCharacter = new Map<string, Set<string>>();
+  // This is only a separate display budget for hypothetical conversions. It never changes inventory.
+  const remainingConvertibleUnits = getInventoryBaseUnits(inventory);
+  const completedByCharacter = new Map<string, Set<string>>();
+  const convertibleByCharacter = new Map<string, Map<string, number>>();
 
   for (const plan of plans) {
     if (!plan.active) {
-      completionByCharacter.set(plan.characterId, new Set());
+      completedByCharacter.set(plan.characterId, new Set());
+      convertibleByCharacter.set(plan.characterId, new Map());
       continue;
     }
     const character = characters.find((item) => item.id === plan.characterId);
@@ -54,14 +64,44 @@ export function allocateInventoryByPlan(
     }
 
     const completed = new Set<string>();
+    const conversionDemands: { materialId: string; remaining: number; baseUnits: number; rank: number; familyId: string }[] = [];
     for (const [materialId, required] of requiredByMaterial) {
       if (!materialCatalogById.has(materialId)) continue;
       const remaining = remainingByMaterial.get(materialId) ?? 0;
       if (remaining >= required) completed.add(materialId);
-      remainingByMaterial.set(materialId, Math.max(0, remaining - required));
+      const used = Math.min(remaining, required);
+      remainingByMaterial.set(materialId, remaining - used);
+
+      const conversion = getConvertibleMaterial(materialId);
+      if (conversion) {
+        remainingConvertibleUnits.set(
+          conversion.familyId,
+          Math.max(0, (remainingConvertibleUnits.get(conversion.familyId) ?? 0) - used * conversion.baseUnits),
+        );
+        if (used < required) {
+          conversionDemands.push({
+            materialId,
+            remaining: required - used,
+            ...conversion,
+          });
+        }
+      }
     }
-    completionByCharacter.set(plan.characterId, completed);
+
+    const convertible = new Map<string, number>();
+    conversionDemands.sort((a, b) => b.rank - a.rank);
+    for (const demand of conversionDemands) {
+      const available = remainingConvertibleUnits.get(demand.familyId) ?? 0;
+      const canConvert = Math.min(demand.remaining, Math.floor(available / demand.baseUnits));
+      if (canConvert > 0) {
+        convertible.set(demand.materialId, canConvert);
+        remainingConvertibleUnits.set(demand.familyId, available - canConvert * demand.baseUnits);
+      }
+    }
+
+    completedByCharacter.set(plan.characterId, completed);
+    convertibleByCharacter.set(plan.characterId, convertible);
   }
 
-  return completionByCharacter;
+  return { completedByCharacter, convertibleByCharacter };
 }

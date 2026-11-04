@@ -7,6 +7,7 @@ type PlanCostSummaryProps = {
   plan: CharacterPlan;
   onOpenInventoryItem: (materialId: string) => void;
   completedMaterialIds: ReadonlySet<string>;
+  convertibleByMaterial: ReadonlyMap<string, number>;
 };
 
 type CostItem = {
@@ -35,10 +36,12 @@ function CostTile({
   item,
   onOpenInventoryItem,
   isComplete,
+  convertible,
 }: {
   item: CostItem;
   onOpenInventoryItem?: () => void;
   isComplete: boolean;
+  convertible: number;
 }) {
   const art = (
     <span className={`plan-cost-art${item.image ? "" : " is-placeholder"}${isComplete ? " is-complete" : ""}`}>
@@ -69,6 +72,11 @@ function CostTile({
         </button>
       ) : art}
       <strong>{numberFormat.format(item.count)}</strong>
+      {convertible > 0 && (
+        <span className="conversion-hint" title={`${convertible} can be made by converting other tiers at 3:1. Inventory counts are unchanged.`}>
+          +{numberFormat.format(convertible)} via 3:1
+        </span>
+      )}
     </div>
   );
 }
@@ -78,6 +86,7 @@ export function PlanCostSummary({
   plan,
   onOpenInventoryItem,
   completedMaterialIds,
+  convertibleByMaterial,
 }: PlanCostSummaryProps) {
   const cost = calculatePlanCost(plan.currentLevel, plan.targetLevel);
   const items: CostItem[] = xpManuals
@@ -128,6 +137,7 @@ export function PlanCostSummary({
               key={item.id}
               item={item}
               isComplete={completedMaterialIds.has(item.id)}
+              convertible={convertibleByMaterial.get(item.id) ?? 0}
               onOpenInventoryItem={
                 materialCatalogById.has(item.id)
                   ? () => onOpenInventoryItem(item.id)

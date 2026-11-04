@@ -20,9 +20,10 @@ export function InventoryAmountDialog({
   onRemoveItem,
   onClose,
 }: InventoryAmountDialogProps) {
-  const [materialQuantity, setMaterialQuantity] = useState(() =>
-    String(inventory.find((item) => item.materialId === materialId)?.owned ?? 0),
-  );
+  const [materialQuantity, setMaterialQuantity] = useState(() => {
+    const owned = inventory.find((item) => item.materialId === materialId)?.owned ?? 0;
+    return owned > 0 ? String(owned) : "";
+  });
   const [inventoryError, setInventoryError] = useState("");
   const quantityInputRef = useRef<HTMLInputElement>(null);
   const selectedCatalogItem = materialCatalogById.get(materialId);
@@ -31,7 +32,6 @@ export function InventoryAmountDialog({
 
   useEffect(() => {
     quantityInputRef.current?.focus();
-    quantityInputRef.current?.select();
   }, []);
 
   useEffect(() => {
@@ -109,9 +109,9 @@ export function InventoryAmountDialog({
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                placeholder="0"
                 value={materialQuantity}
                 onChange={(event) => setMaterialQuantity(event.target.value)}
-                onFocus={(event) => event.currentTarget.select()}
                 aria-describedby={inventoryError ? "inventory-amount-error" : undefined}
               />
             </label>

@@ -12,6 +12,7 @@ type CharacterPlanCardProps = {
   onReorder: (draggedId: string, targetId: string) => void;
   onOpenInventoryItem: (materialId: string) => void;
   completedMaterialIds: ReadonlySet<string>;
+  convertibleByMaterial: ReadonlyMap<string, number>;
 };
 
 export function CharacterPlanCard({
@@ -22,8 +23,8 @@ export function CharacterPlanCard({
   onReorder,
   onOpenInventoryItem,
   completedMaterialIds,
+  convertibleByMaterial,
 }: CharacterPlanCardProps) {
-  const [loadedPortrait, setLoadedPortrait] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragGesture = useRef<{
     pointerId: number;
@@ -32,8 +33,6 @@ export function CharacterPlanCard({
     holdTimer: number;
     isActive: boolean;
   } | null>(null);
-  const portraitLoaded = loadedPortrait === character.portraitUrl;
-
   function clearDragGesture() {
     const gesture = dragGesture.current;
     if (!gesture) return;
@@ -52,6 +51,17 @@ export function CharacterPlanCard({
       className={`plan-card${isDragging ? " is-dragging" : ""}`}
       data-plan-id={plan.characterId}
     >
+      {character.portraitUrl && (
+        <div className="plan-card-background-art" aria-hidden="true">
+          <img
+            src={character.portraitUrl}
+            alt=""
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
+          />
+        </div>
+      )}
       <div
         className="plan-card-top"
         onPointerDown={(event) => {
@@ -119,21 +129,6 @@ export function CharacterPlanCard({
         onPointerCancel={clearDragGesture}
         onLostPointerCapture={clearDragGesture}
       >
-        <div className="character-avatar" aria-hidden="true">
-          <span className={portraitLoaded ? "is-hidden" : ""}>
-            {character.name.slice(0, 1).toUpperCase()}
-          </span>
-          {character.portraitUrl && (
-            <img
-              src={character.portraitUrl}
-              alt=""
-              onLoad={() => setLoadedPortrait(character.portraitUrl ?? null)}
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-              }}
-            />
-          )}
-        </div>
         <div className="character-info">
           <h3>{character.name}</h3>
           <span className="character-meta">
@@ -202,12 +197,14 @@ export function CharacterPlanCard({
         plan={plan}
         onOpenInventoryItem={onOpenInventoryItem}
         completedMaterialIds={completedMaterialIds}
+        convertibleByMaterial={convertibleByMaterial}
       />
       <PotentialCostSummary
         character={character}
         plan={plan}
         onOpenInventoryItem={onOpenInventoryItem}
         completedMaterialIds={completedMaterialIds}
+        convertibleByMaterial={convertibleByMaterial}
       />
 
       <p className="promotion-status">
@@ -221,7 +218,7 @@ export function CharacterPlanCard({
       />
 
       <div className="plan-card-footer">
-        <span className="demo-note">Demo data</span>
+        <span className="demo-note">Game data · verify in game</span>
         <button
           className="text-button danger-text"
           type="button"

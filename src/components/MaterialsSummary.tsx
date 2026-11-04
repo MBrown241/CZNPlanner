@@ -102,11 +102,14 @@ function MaterialTile({
           ? `${numberFormat.format(item.remaining)} needed`
           : `${numberFormat.format(item.required)} needed`}
       </span>
-      <span className="requirement-tile-owned">
-        {item.inventoryTracked
-          ? `${numberFormat.format(item.owned)} owned / ${numberFormat.format(item.required)} total`
-          : "Class match pending"}
-      </span>
+      {(item.convertible ?? 0) > 0 && (
+        <span
+          className="conversion-hint"
+          title={`${item.convertible} could be covered by converting other tiers at 3:1. Inventory counts are unchanged.`}
+        >
+          +{numberFormat.format(item.convertible)} via 3:1
+        </span>
+      )}
     </article>
   );
 }
@@ -130,9 +133,6 @@ export function MaterialsSummary({
         <div>
           <h2 id="materials-heading">Materials needed</h2>
         </div>
-        <span className="material-symbol" aria-hidden="true">
-          &#9671;
-        </span>
       </div>
 
       {requirements.length === 0 ? (

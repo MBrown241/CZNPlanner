@@ -16,7 +16,13 @@ import "./App.css";
 
 function App() {
   const [page, setPage] = useState<Page>("planner");
-  const [plans, setPlans] = useState<CharacterPlan[]>(readPlans);
+  const [plans, setPlans] = useState<CharacterPlan[]>(() => {
+    const storedPlans = readPlans();
+    const knownCharacters = new Set(characters.map((character) => character.id));
+    const currentPlans = storedPlans.filter((plan) => knownCharacters.has(plan.characterId));
+    if (currentPlans.length !== storedPlans.length) writePlans(currentPlans);
+    return currentPlans;
+  });
   const [inventory, setInventory] = useState<InventoryItem[]>(readInventory);
   const [storageWarning, setStorageWarning] = useState(() => !canAccessStorage());
   const [inventoryMaterialToOpen, setInventoryMaterialToOpen] = useState<string | null>(null);
@@ -128,7 +134,7 @@ function App() {
         </div>
       )}
 
-      {page === "planner" ? (
+      {page === "planner" && (
         <PlannerPage
           characters={characters}
           plans={plans}
@@ -139,15 +145,15 @@ function App() {
           onRemovePlan={removePlan}
           onReorderPlans={reorderPlans}
         />
-      ) : (
-        <InventoryPage
-          inventory={inventory}
-          onAddItem={addInventoryItem}
-          onUpdateQuantity={updateOwnedQuantity}
-          onRemoveItem={removeInventoryItem}
-          onClearInventory={clearInventory}
-        />
       )}
+      <InventoryPage
+        isActive={page === "inventory"}
+        inventory={inventory}
+        onAddItem={addInventoryItem}
+        onUpdateQuantity={updateOwnedQuantity}
+        onRemoveItem={removeInventoryItem}
+        onClearInventory={clearInventory}
+      />
 
       {page === "planner" && inventoryMaterialToOpen && (
         <InventoryAmountDialog
@@ -162,7 +168,7 @@ function App() {
 
       <footer className="app-footer">
         <span>CZN Upgrade Planner</span>
-        <span>Demo roster · shared 4/5-star cost assumption</span>
+        <span>Game roster · shared 4/5-star cost assumption</span>
       </footer>
     </div>
   );

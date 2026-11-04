@@ -8,6 +8,7 @@ type PotentialCostSummaryProps = {
   plan: CharacterPlan;
   onOpenInventoryItem: (materialId: string) => void;
   completedMaterialIds: ReadonlySet<string>;
+  convertibleByMaterial: ReadonlyMap<string, number>;
 };
 
 const numberFormat = new Intl.NumberFormat();
@@ -17,6 +18,15 @@ const materialIconFiles: Record<string, string> = {
   "growth-common-justice": "growth-common-justice.png",
   "growth-great-justice": "growth-great-justice.png",
   "growth-premium-justice": "growth-premium-justice.png",
+  "growth-common-passion": "growth-common-passion.webp",
+  "growth-great-passion": "growth-great-passion.webp",
+  "growth-premium-passion": "growth-premium-passion.webp",
+  "growth-common-instinct": "growth-common-instinct.webp",
+  "growth-great-instinct": "growth-great-instinct.webp",
+  "growth-premium-instinct": "growth-premium-instinct.webp",
+  "growth-common-order": "growth-common-order.webp",
+  "growth-great-order": "growth-great-order.webp",
+  "growth-premium-order": "growth-premium-order.webp",
   "growth-common-void": "growth-common-void.png",
   "growth-great-void": "growth-great-void.png",
   "growth-premium-void": "growth-premium-void.png",
@@ -29,14 +39,23 @@ function PotentialMaterialTile({
   item,
   onOpenInventoryItem,
   isComplete,
+  convertible,
 }: {
   item: PotentialResourceCost;
   onOpenInventoryItem?: () => void;
   isComplete: boolean;
+  convertible: number;
 }) {
   const imageFile = materialIconFiles[item.id];
+  const growthTierClass = item.id.startsWith("growth-common-")
+    ? " growth-art-common"
+    : item.id.startsWith("growth-great-")
+      ? " growth-art-great"
+      : item.id.startsWith("growth-premium-")
+        ? " growth-art-premium"
+        : "";
   const art = (
-    <span className={`plan-cost-art${imageFile ? "" : " is-placeholder"}${isComplete ? " is-complete" : ""}`}>
+    <span className={`plan-cost-art${growthTierClass}${imageFile ? "" : " is-placeholder"}${isComplete ? " is-complete" : ""}`}>
       {imageFile ? (
         <img src={`/images/materials/${imageFile}`} alt="" loading="lazy" />
       ) : (
@@ -69,6 +88,11 @@ function PotentialMaterialTile({
         </button>
       ) : art}
       <strong>{numberFormat.format(item.amount)}</strong>
+      {convertible > 0 && (
+        <span className="conversion-hint" title={`${convertible} can be made by converting other tiers at 3:1. Inventory counts are unchanged.`}>
+          +{numberFormat.format(convertible)} via 3:1
+        </span>
+      )}
     </div>
   );
 }
@@ -78,17 +102,15 @@ export function PotentialCostSummary({
   plan,
   onOpenInventoryItem,
   completedMaterialIds,
+  convertibleByMaterial,
 }: PotentialCostSummaryProps) {
-  const profile = character.potentialProfileId
-    ? potentialProfiles[character.potentialProfileId]
-    : undefined;
-  if (!profile) return null;
+  const profile = potentialProfiles[character.potentialProfileId ?? character.id];
 
   const totals = new Map<string, PotentialResourceCost>();
   let hasPlannedLevels = false;
   let hasPartialCosts = false;
 
-  for (const node of profile.nodes) {
+  for (const node of profile?.nodes ?? []) {
     const progress = getPotentialProgress(plan, node);
     if (progress.targetLevel <= progress.currentLevel) continue;
 
@@ -105,22 +127,24 @@ export function PotentialCostSummary({
     }
   }
 
-  if (!hasPlannedLevels) return null;
-
   const items = [...totals.values()];
   return (
-    <section className="plan-cost-summary potential-cost-summary" aria-label="Potential materials needed">
+    <section
+      className={`plan-cost-summary potential-cost-summary${hasPlannedLevels ? "" : " is-empty"}`}
+      aria-label="Potential materials needed"
+    >
       <div className="plan-cost-heading">
         <span className="pending-label">Potential costs</span>
         {hasPartialCosts && <span className="potential-cost-partial">Partial data</span>}
       </div>
-      {items.length > 0 ? (
+      {hasPlannedLevels && items.length > 0 ? (
         <div className="plan-cost-items">
           {items.map((item) => (
             <PotentialMaterialTile
               key={item.id}
               item={item}
               isComplete={completedMaterialIds.has(item.id)}
+              convertible={convertibleByMaterial.get(item.id) ?? 0}
               onOpenInventoryItem={
                 materialCatalogById.has(item.id)
                   ? () => onOpenInventoryItem(item.id)
@@ -129,8 +153,10 @@ export function PotentialCostSummary({
             />
           ))}
         </div>
-      ) : (
+      ) : hasPlannedLevels ? (
         <p className="no-upgrade-cost">Cost data not recorded yet</p>
+      ) : (
+        <div className="potential-cost-empty-space" aria-hidden="true" />
       )}
     </section>
   );

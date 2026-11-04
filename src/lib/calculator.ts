@@ -7,6 +7,7 @@ import {
 import type { ManualTier } from "../data/progression";
 import { getClassManualId, materialCatalog } from "../data/materials";
 import { potentialProfiles } from "../data/potentials";
+import { getConvertibleCoverage } from "./materialConversions";
 import { calculatePotentialCost, getPotentialProgress } from "./potentialCosts";
 import type {
   Character,
@@ -129,7 +130,7 @@ export function calculateRequirements(
     if (!resourceInfoById.has(resource.id)) resourceInfoById.set(resource.id, resource);
   }
 
-  return [...resourceInfoById.values()]
+  const requirements = [...resourceInfoById.values()]
     .filter(({ id }) => (totals[id] ?? 0) > 0)
     .map(({ id, name, inventoryTracked }) => {
       const required = totals[id] ?? 0;
@@ -143,4 +144,14 @@ export function calculateRequirements(
         inventoryTracked,
       };
     });
+
+  const convertibleByMaterial = getConvertibleCoverage(
+    requirements.filter((requirement) => requirement.inventoryTracked),
+    inventory,
+  );
+
+  return requirements.map((requirement) => ({
+    ...requirement,
+    convertible: convertibleByMaterial.get(requirement.id) ?? 0,
+  }));
 }

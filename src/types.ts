@@ -63,6 +63,8 @@ export type MaterialRequirement = {
   required: number;
   owned: number;
   remaining: number;
+  /** Number of remaining units that could be made by tier conversion; informational only. */
+  convertible?: number;
   inventoryTracked: boolean;
 };
 

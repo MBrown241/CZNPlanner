@@ -80,7 +80,15 @@ export function PlannerPage({
         onOpenInventoryItem={onOpenInventoryItem}
       />
 
-      <dialog className="potential-dialog character-picker-dialog" ref={characterPickerRef}>
+      <dialog
+        className="potential-dialog character-picker-dialog"
+        ref={characterPickerRef}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            characterPickerRef.current?.close();
+          }
+        }}
+      >
         <header className="potential-dialog-header">
           <div>
             <h3>Add a character plan</h3>
@@ -133,7 +141,6 @@ export function PlannerPage({
             <div>
               <h2 id="plans-heading">Character plans</h2>
             </div>
-            <span className="count-pill">{plans.length} total</span>
           </div>
 
           {plans.length === 0 ? (
@@ -168,7 +175,8 @@ export function PlannerPage({
                     onRemove={onRemovePlan}
                     onReorder={onReorderPlans}
                     onOpenInventoryItem={onOpenInventoryItem}
-                    completedMaterialIds={inventoryCompletion.get(plan.characterId) ?? new Set<string>()}
+                    completedMaterialIds={inventoryCompletion.completedByCharacter.get(plan.characterId) ?? new Set<string>()}
+                    convertibleByMaterial={inventoryCompletion.convertibleByCharacter.get(plan.characterId) ?? new Map<string, number>()}
                   />
                 );
               })}

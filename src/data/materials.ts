@@ -56,20 +56,6 @@ const availableImageIds = new Set([
   "undetermined-ego-crystal",
 ]);
 
-const gachaAttributeIds: Record<GrowthAttribute, string> = {
-  Passion: "love",
-  Instinct: "instinct",
-  Order: "norms",
-  Justice: "justice",
-  Void: "void",
-};
-
-function remoteGrowthStoneImage(attribute: GrowthAttribute, tier: "Common" | "Great" | "Premium") {
-  const tierIndex = tier === "Common" ? 1 : tier === "Great" ? 2 : 3;
-  const path = `/img/chaos-zero-nightmare/dm/items/icon_item_card_levelup_${gachaAttributeIds[attribute]}_${tierIndex}.webp`;
-  return `https://www.gacha.gg/_next/image?q=75&url=${encodeURIComponent(path)}&w=64`;
-}
-
 export function materialImageSource(image?: string) {
   if (!image) return undefined;
   return image.startsWith("https://") ? image : `/images/materials/${image}`;
@@ -124,9 +110,7 @@ export const materialCatalog: MaterialCatalogItem[] = [
           id,
           name: `${tier} Growth Stone of ${attributeName}`,
           category: "Potential Materials" as const,
-          image: availableImageIds.has(id)
-            ? `${id}.png`
-            : remoteGrowthStoneImage(attribute, tier),
+          image: availableImageIds.has(id) ? `${id}.png` : `${id}.webp`,
         };
       }),
   ),

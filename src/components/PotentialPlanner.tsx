@@ -12,9 +12,7 @@ type PotentialPlannerProps = {
 };
 
 export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlannerProps) {
-  const profile = character.potentialProfileId
-    ? potentialProfiles[character.potentialProfileId]
-    : undefined;
+  const profile = potentialProfiles[character.potentialProfileId ?? character.id];
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [draft, setDraft] = useState<Record<string, PotentialProgress>>({});
   const [selectedNodeId, setSelectedNodeId] = useState("");
@@ -114,7 +112,19 @@ export function PotentialPlanner({ character, plan, onUpdate }: PotentialPlanner
         <span className="potential-count">{plannedCount} planned</span>
       </button>
 
-      <dialog className="potential-dialog" ref={dialogRef}>
+      <dialog
+        className="potential-dialog"
+        ref={dialogRef}
+        onClick={(event) => {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const clickedOutside =
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom;
+          if (clickedOutside) event.currentTarget.close();
+        }}
+      >
         <header className="potential-dialog-header">
           <div>
             <h3>{character.name}</h3>

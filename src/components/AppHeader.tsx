@@ -34,7 +34,7 @@ export function AppHeader({ page, onPageChange }: AppHeaderProps) {
         </button>
       </nav>
       <span className="data-badge">
-        <span className="status-dot" /> Demo data
+        <span className="status-dot" /> Game data
       </span>
     </header>
   );

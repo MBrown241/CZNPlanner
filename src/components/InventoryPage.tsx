@@ -4,6 +4,7 @@ import type { InventoryItem } from "../types";
 import { InventoryAmountDialog } from "./InventoryAmountDialog";
 
 type InventoryPageProps = {
+  isActive: boolean;
   inventory: InventoryItem[];
   onAddItem: (item: InventoryItem) => boolean;
   onUpdateQuantity: (materialId: string, quantity: number) => void;
@@ -30,6 +31,13 @@ function InventoryMaterialTile({
   const [imageFailed, setImageFailed] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const showImage = Boolean(image) && !imageFailed;
+  const growthTierClass = materialId.startsWith("growth-common-")
+    ? " growth-art-common"
+    : materialId.startsWith("growth-great-")
+      ? " growth-art-great"
+      : materialId.startsWith("growth-premium-")
+        ? " growth-art-premium"
+        : "";
 
   return (
     <button
@@ -39,12 +47,12 @@ function InventoryMaterialTile({
       aria-label={`${name}: ${numberFormat.format(owned)} owned. Edit amount.`}
       title={`Edit ${name}`}
     >
-      <span className={`inventory-material-image${!showImage ? " is-placeholder" : !imageLoaded ? " is-loading" : ""}`}>
+      <span className={`inventory-material-image${growthTierClass}${!showImage ? " is-placeholder" : !imageLoaded ? " is-loading" : ""}`}>
         {showImage && (
           <img
             src={materialImageSource(image)}
             alt=""
-            loading={image?.startsWith("https://") ? "lazy" : "eager"}
+            loading="eager"
             decoding="async"
             className={imageLoaded ? "is-loaded" : ""}
             onLoad={() => setImageLoaded(true)}
@@ -63,6 +71,7 @@ function InventoryMaterialTile({
 }
 
 export function InventoryPage({
+  isActive,
   inventory,
   onAddItem,
   onUpdateQuantity,
@@ -71,7 +80,16 @@ export function InventoryPage({
 }: InventoryPageProps) {
   const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [wasActive, setWasActive] = useState(isActive);
   const ownedById = new Map(inventory.map((item) => [item.materialId, item.owned]));
+
+  if (wasActive !== isActive) {
+    setWasActive(isActive);
+    if (!isActive) {
+      setEditingMaterialId(null);
+      setConfirmClear(false);
+    }
+  }
 
   useEffect(() => {
     if (!confirmClear) return;
@@ -87,12 +105,12 @@ export function InventoryPage({
   }
 
   return (
-    <main className="page-content">
+    <main className="page-content" hidden={!isActive}>
       <div className="page-heading">
         <div>
           <h1>Material inventory</h1>
           <p className="page-description">
-            Click a material to enter how many you own. Totals update across active plans.
+            Click a material to enter how many you own. The planner shows optional 3:1 conversion hints for growth stones and class manuals; inventory counts stay as entered.
           </p>
         </div>
         <span className="data-badge inventory-badge">

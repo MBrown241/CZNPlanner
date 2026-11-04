@@ -1,4 +1,5 @@
-import type { PotentialNode, PotentialProfile } from "../types";
+import type { GrowthAttribute, PotentialNode, PotentialProfile } from "../types";
+import { characters } from "./characters";
 
 const gachaCharacterUrl = (name: string) =>
   `https://www.gacha.gg/chaos-zero-nightmare/characters/${name}`;
@@ -8,7 +9,7 @@ function units(amount: number) {
 }
 
 function growthStone(
-  attribute: string,
+  attribute: GrowthAttribute,
   tier: "Common" | "Great" | "Premium",
   amount: number,
 ) {
@@ -26,7 +27,7 @@ function item(id: string, name: string, amount: number) {
 }
 
 function makeNodes(
-  attribute: string,
+  attribute: GrowthAttribute,
   statNodeNames: [string, string],
   branchNodeName: string,
   verifiedRanks: {
@@ -149,6 +150,7 @@ function makeNodes(
       id: "potential-5-0",
       name: statNodeNames[0],
       mapPosition: { x: 59, y: 31 },
+      rankCap: 5,
       ...(verifiedRanks.criticalChanceRankOne && {
         rankCap: 5,
         knownRankCosts: [
@@ -182,6 +184,7 @@ function makeNodes(
         ? "Basic Card Proficiency"
         : "Potential 5-1: Epiphany",
       mapPosition: { x: 46, y: 10 },
+      rankCap: 5,
       ...(verifiedRanks.basicCardProficiency && {
         rankCap: 5,
         pathType: "branch" as const,
@@ -216,14 +219,26 @@ function makeNodes(
         ? "Critical Damage Proficiency"
         : statNodeNames[1],
       mapPosition: { x: 80, y: 31 },
+      rankCap: 5,
       ...(verifiedRanks.criticalDamageRankOne && {
         rankCap: 5,
         knownRankCosts: [
           [units(42_000), growthStone(attribute, "Premium", 20)],
           [units(42_000), growthStone(attribute, "Premium", 20)],
           [units(42_000), growthStone(attribute, "Premium", 24)],
+          [
+            units(42_000),
+            growthStone(attribute, "Premium", 24),
+            item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
+          ],
+          [
+            units(42_000),
+            growthStone(attribute, "Premium", 28),
+            item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
+            item("undetermined-ego-crystal", "Undetermined Ego Crystal", 1),
+          ],
         ],
-        rankCostsComplete: [true, true, true],
+        rankCostsComplete: [true, true, true, true, true],
       }),
       costs: [
         units(210_000),
@@ -246,9 +261,7 @@ function makeNodes(
   ];
 }
 
-// Costs are sourced per character and represent each node from level 1 to its cap.
-// These two records are examples; do not assume every character has the same tree.
-export const potentialProfiles: Record<string, PotentialProfile> = {
+const characterSpecificProfiles: Record<string, PotentialProfile> = {
   mika: {
     characterId: "mika",
     attribute: "Justice",
@@ -294,4 +307,48 @@ export const potentialProfiles: Record<string, PotentialProfile> = {
       },
     ),
   },
+};
+
+const standardConnections: [string, string][] = [
+  ["first-epiphany", "basic-cards"],
+  ["basic-cards", "common-cards"],
+  ["common-cards", "potential-3-1"],
+  ["common-cards", "signature-cards"],
+  ["signature-cards", "potential-5-0"],
+  ["potential-5-0", "potential-5-1"],
+  ["potential-5-1", "divine-epiphany"],
+  ["potential-5-0", "potential-6-0"],
+  ["potential-6-0", "unique"],
+];
+
+function createStandardProfile(
+  characterId: string,
+  attribute: GrowthAttribute,
+): PotentialProfile {
+  return {
+    characterId,
+    attribute,
+    sourceUrl: gachaCharacterUrl(characterId),
+    connections: standardConnections,
+    nodes: makeNodes(
+      attribute,
+      ["Potential 5-0", "Potential 6-0"],
+      "Potential 3-1",
+    ),
+  };
+}
+
+const standardProfiles = Object.fromEntries(
+  characters
+    .filter((character) => character.attribute)
+    .map((character) => [
+      character.id,
+      createStandardProfile(character.id, character.attribute!),
+    ]),
+);
+
+// Shared node costs and topology are prefilled; Renoa and Mika retain their tailored data.
+export const potentialProfiles: Record<string, PotentialProfile> = {
+  ...standardProfiles,
+  ...characterSpecificProfiles,
 };

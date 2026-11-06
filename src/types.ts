@@ -37,8 +37,11 @@ export type PotentialNode = {
   costs: PotentialResourceCost[];
   mapPosition?: { x: number; y: number };
   rankCap?: number;
-  /** null/omitted means unknown; [] means the rank has no cost. */
+  /** Cost to upgrade from rank 0 to rank 1; null means not recorded yet. */
+  levelZeroCosts?: PotentialResourceCost[] | null;
+  /** Costs from rank 1 onward, in order; null/omitted means unknown, [] means free. */
   knownRankCosts?: (PotentialResourceCost[] | null)[];
+  /** Completeness flags matching knownRankCosts. */
   rankCostsComplete?: boolean[];
   pathType?: "branch" | "main";
 };

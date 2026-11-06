@@ -32,18 +32,24 @@ export function calculatePotentialCost(
   const target = Math.max(current, Math.min(cap, Math.floor(targetLevel)));
   if (target <= current) return { costs: [], complete: true };
 
-  // Full-node source totals remain usable when planning the complete node from zero.
-  if (current === 0 && target === cap) return { costs: node.costs, complete: true };
+  // Full-node totals can fill in a complete plan when the 0 -> 1 cost is recorded.
+  // Otherwise keep the rank-by-rank result partial until that missing entry is supplied.
+  if (current === 0 && target === cap && node.levelZeroCosts != null) {
+    return { costs: node.costs, complete: true };
+  }
 
   const totals = new Map<string, PotentialResourceCost>();
   let complete = true;
   for (let level = current + 1; level <= target; level += 1) {
-    const rankCosts = node.knownRankCosts?.[level - 1];
+    // Level 0 is its own entry (0 -> 1); later entries are recorded from rank 1 upward.
+    const rankCosts = level === 1
+      ? node.levelZeroCosts
+      : node.knownRankCosts?.[level - 2];
     if (rankCosts == null) {
       complete = false;
       continue;
     }
-    if (!node.rankCostsComplete?.[level - 1]) complete = false;
+    if (level > 1 && !node.rankCostsComplete?.[level - 2]) complete = false;
     for (const cost of rankCosts) {
       const existing = totals.get(cost.id);
       totals.set(cost.id, {

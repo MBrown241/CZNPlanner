@@ -29,11 +29,9 @@ function item(id: string, name: string, amount: number) {
 function makeNodes(
   attribute: GrowthAttribute,
   statNodeNames: [string, string],
-  branchNodeName: string,
   verifiedRanks: {
     criticalChanceRankOne?: boolean;
     criticalDamageRankOne?: boolean;
-    basicCardProficiency?: boolean;
     cardEpiphany?: boolean;
     uniqueStatUpgrade?: boolean;
   } = {},
@@ -50,6 +48,7 @@ function makeNodes(
       name: "Basic Card Upgrade",
       mapPosition: { x: 28, y: 80 },
       rankCap: 10,
+      levelZeroCosts: [units(3_000), growthStone(attribute, "Common", 4)],
       knownRankCosts: [
         [units(3_000), growthStone(attribute, "Common", 4)],
         [units(3_000), growthStone(attribute, "Common", 4)],
@@ -74,38 +73,42 @@ function makeNodes(
       name: "Common Card Upgrade",
       mapPosition: { x: 17, y: 56 },
       rankCap: 10,
+      levelZeroCosts: [units(16_000), growthStone(attribute, "Great", 5)],
       knownRankCosts: [
         [units(16_000), growthStone(attribute, "Great", 5)],
         [units(16_000), growthStone(attribute, "Great", 5)],
-        [growthStone(attribute, "Great", 6)],
-        [growthStone(attribute, "Great", 6)],
-        [growthStone(attribute, "Great", 6)],
-        [growthStone(attribute, "Premium", 5)],
+        [units(20_000), growthStone(attribute, "Great", 6)],
+        [units(20_000), growthStone(attribute, "Great", 6)],
+        [units(20_000), growthStone(attribute, "Great", 6)],
+        [units(20_000), growthStone(attribute, "Premium", 5)],
         [
+          units(28_000),
           growthStone(attribute, "Premium", 5),
           item("eye-of-wailing-prodigal", "Eye of Wailing Prodigal (Wailing Prodigal)", 1),
         ],
         [
+          units(28_000),
           growthStone(attribute, "Premium", 6),
           item("eye-of-wailing-prodigal", "Eye of Wailing Prodigal (Wailing Prodigal)", 1),
         ],
         [
+          units(28_000),
           growthStone(attribute, "Premium", 8),
           item("eye-of-wailing-prodigal", "Eye of Wailing Prodigal (Wailing Prodigal)", 2),
         ],
         [],
       ],
-      rankCostsComplete: [true, true, false, false, false, false, false, false, false, true],
+      rankCostsComplete: Array(10).fill(true),
       costs: [
-        units(224_000),
-        growthStone(attribute, "Great", 33),
+        units(196_000),
+        growthStone(attribute, "Great", 28),
         growthStone(attribute, "Premium", 24),
         item("eye-of-wailing-prodigal", "Eye of Wailing Prodigal (Wailing Prodigal)", 4),
       ],
     },
     {
       id: "potential-3-1",
-      name: branchNodeName,
+      name: "Basic Card Proficiency (Early)",
       mapPosition: { x: 42, y: 56 },
       costs: [units(24_000), growthStone(attribute, "Great", 16)],
       pathType: "branch",
@@ -115,14 +118,16 @@ function makeNodes(
       name: "Signature Card Upgrade",
       mapPosition: { x: 37, y: 31 },
       rankCap: 10,
+      levelZeroCosts: [units(20_000), growthStone(attribute, "Great", 8)],
       knownRankCosts: [
         [units(20_000), growthStone(attribute, "Great", 8)],
-        [growthStone(attribute, "Great", 10)],
-        [growthStone(attribute, "Great", 12)],
-        [growthStone(attribute, "Great", 14)],
-        [growthStone(attribute, "Premium", 8)],
-        [growthStone(attribute, "Premium", 8)],
+        [units(20_000), growthStone(attribute, "Great", 10)],
+        [units(20_000), growthStone(attribute, "Great", 12)],
+        [units(20_000), growthStone(attribute, "Great", 14)],
+        [units(28_000), growthStone(attribute, "Premium", 8)],
+        [units(28_000), growthStone(attribute, "Premium", 8)],
         [
+          units(28_000),
           growthStone(attribute, "Premium", 10),
           item("eye-of-wailing-prodigal", "Eye of Wailing Prodigal (Wailing Prodigal)", 1),
         ],
@@ -151,6 +156,7 @@ function makeNodes(
       name: statNodeNames[0],
       mapPosition: { x: 59, y: 31 },
       rankCap: 5,
+      levelZeroCosts: [units(28_000), growthStone(attribute, "Premium", 16)],
       ...(verifiedRanks.criticalChanceRankOne && {
         rankCap: 5,
         knownRankCosts: [
@@ -180,21 +186,9 @@ function makeNodes(
     },
     {
       id: "potential-5-1",
-      name: verifiedRanks.basicCardProficiency
-        ? "Basic Card Proficiency"
-        : "Potential 5-1: Epiphany",
+      name: "Basic Card Proficiency (Late)",
       mapPosition: { x: 46, y: 10 },
-      rankCap: 5,
-      ...(verifiedRanks.basicCardProficiency && {
-        rankCap: 5,
-        pathType: "branch" as const,
-        knownRankCosts: [[
-          units(60_000),
-          growthStone(attribute, "Premium", 26),
-          item("shards-of-condemnation", "Shards of Condemnation (Judas)", 2),
-        ]],
-        rankCostsComplete: [true],
-      }),
+      pathType: "branch",
       costs: [
         units(60_000),
         growthStone(attribute, "Premium", 26),
@@ -220,6 +214,7 @@ function makeNodes(
         : statNodeNames[1],
       mapPosition: { x: 80, y: 31 },
       rankCap: 5,
+      levelZeroCosts: [units(42_000), growthStone(attribute, "Premium", 20)],
       ...(verifiedRanks.criticalDamageRankOne && {
         rankCap: 5,
         knownRankCosts: [
@@ -277,7 +272,7 @@ const characterSpecificProfiles: Record<string, PotentialProfile> = {
       ["potential-5-0", "potential-6-0"],
       ["potential-6-0", "unique"],
     ],
-    nodes: makeNodes("Justice", ["Potential 5-0", "Potential 6-0"], "Epiphany"),
+    nodes: makeNodes("Justice", ["Potential 5-0", "Potential 6-0"]),
   },
   renoa: {
     characterId: "renoa",
@@ -297,11 +292,9 @@ const characterSpecificProfiles: Record<string, PotentialProfile> = {
     nodes: makeNodes(
       "Void",
       ["Critical Chance Proficiency", "Critical Damage"],
-      "Signature Card Proficiency",
       {
         criticalChanceRankOne: true,
         criticalDamageRankOne: true,
-        basicCardProficiency: true,
         cardEpiphany: true,
         uniqueStatUpgrade: true,
       },
@@ -333,7 +326,6 @@ function createStandardProfile(
     nodes: makeNodes(
       attribute,
       ["Potential 5-0", "Potential 6-0"],
-      "Potential 3-1",
     ),
   };
 }

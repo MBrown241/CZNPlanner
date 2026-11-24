@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type PotentialLevelStepperProps = {
   label: string;
@@ -19,9 +19,13 @@ export function PotentialLevelStepper({
 }: PotentialLevelStepperProps) {
   const [inputValue, setInputValue] = useState(String(value));
 
-  useEffect(() => {
+  // Re-sync the text box when the level changes from outside (e.g. the +/- buttons).
+  // Done during render instead of in an effect, per React's "adjusting state when a prop changes" pattern.
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (value !== syncedValue) {
+    setSyncedValue(value);
     setInputValue(String(value));
-  }, [value]);
+  }
 
   function updateFromInput(rawValue: string) {
     setInputValue(rawValue);

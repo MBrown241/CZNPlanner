@@ -137,9 +137,6 @@ export function MaterialsSummary({
 
       {requirements.length === 0 ? (
         <div className="requirements-empty">
-          <div className="requirements-art" aria-hidden="true">
-            &#9671;
-          </div>
           <h3>{activePlanCount === 0 ? "No active plans" : "No upgrades planned"}</h3>
           <p>
             {activePlanCount === 0

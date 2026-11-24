@@ -33,9 +33,6 @@ export function AppHeader({ page, onPageChange }: AppHeaderProps) {
           Inventory
         </button>
       </nav>
-      <span className="data-badge">
-        <span className="status-dot" /> Game data
-      </span>
     </header>
   );
 }

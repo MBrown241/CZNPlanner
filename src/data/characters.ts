@@ -12,6 +12,7 @@ const roster: CharacterRecord[] = [
   { id: "anika", name: "Anika", rarity: 4, combatClass: "Striker", attribute: "Order" },
   { id: "arabella", name: "Arabella", rarity: 5, combatClass: "Striker", attribute: "Instinct" },
   { id: "beryl", name: "Beryl", rarity: 4, combatClass: "Ranger", attribute: "Justice" },
+  { id: "blazebell", name: "Blazebell", rarity: 5, combatClass: "Controller", attribute: "Justice" },
   { id: "cassius", name: "Cassius", rarity: 4, combatClass: "Controller", attribute: "Instinct" },
   { id: "chizuru", name: "Chizuru", rarity: 5, combatClass: "Psionic", attribute: "Void" },
   { id: "diana", name: "Diana", rarity: 5, combatClass: "Hunter", attribute: "Passion" },
@@ -50,6 +51,9 @@ const roster: CharacterRecord[] = [
 
 function portraitUrl(characterId: string) {
   if (characterId === "anika") return "/images/characters/anika.webp";
+  if (characterId === "blazebell") {
+    return "https://cdn.prydwen.gg/images/chaos/characters/blazebell_icon.webp";
+  }
   return `https://cdn.prydwen.gg/images/chaos/characters/${characterId}_full.webp`;
 }
 

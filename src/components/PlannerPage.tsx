@@ -115,6 +115,11 @@ export function PlannerPage({
                 <span>{character.name.slice(0, 1).toUpperCase()}</span>
                 {character.portraitUrl && (
                   <img
+                    className={
+                      character.id === "blazebell"
+                        ? "character-picker-icon-image--square"
+                        : undefined
+                    }
                     src={character.portraitUrl}
                     alt=""
                     onError={(event) => {
@@ -145,18 +150,8 @@ export function PlannerPage({
 
           {plans.length === 0 ? (
             <div className="empty-state">
-              <span className="empty-icon" aria-hidden="true">
-                ✦
-              </span>
               <h3>No plans yet</h3>
               <p>Add a character to start setting level and Potential goals.</p>
-              <button
-                className="button button-secondary"
-                type="button"
-                onClick={showAddCharacterPanel}
-              >
-                Add your first character
-              </button>
             </div>
           ) : (
             <div className="plan-list">

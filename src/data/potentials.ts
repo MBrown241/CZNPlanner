@@ -30,7 +30,6 @@ function makeNodes(
   attribute: GrowthAttribute,
   statNodeNames: [string, string],
   verifiedRanks: {
-    criticalChanceRankOne?: boolean;
     criticalDamageRankOne?: boolean;
     cardEpiphany?: boolean;
     uniqueStatUpgrade?: boolean;
@@ -142,7 +141,7 @@ function makeNodes(
           item("eye-of-wailing-prodigal", "Eye of Wailing Prodigal (Wailing Prodigal)", 2),
         ],
       ],
-      rankCostsComplete: [true, false, false, false, false, false, false, true, true],
+      rankCostsComplete: Array(9).fill(true),
       costs: [
         units(248_000),
         growthStone(attribute, "Great", 52),
@@ -157,26 +156,23 @@ function makeNodes(
       mapPosition: { x: 59, y: 31 },
       rankCap: 5,
       levelZeroCosts: [units(28_000), growthStone(attribute, "Premium", 16)],
-      ...(verifiedRanks.criticalChanceRankOne && {
-        rankCap: 5,
-        knownRankCosts: [
-          [units(28_000), growthStone(attribute, "Premium", 16)],
-          [units(28_000), growthStone(attribute, "Premium", 16)],
-          [units(38_000), growthStone(attribute, "Premium", 16)],
-          [
-            units(38_000),
-            growthStone(attribute, "Premium", 18),
-            item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
-          ],
-          [
-            units(38_000),
-            growthStone(attribute, "Premium", 18),
-            item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
-            item("undetermined-ego-crystal", "Undetermined Ego Crystal", 1),
-          ],
+      knownRankCosts: [
+        [units(28_000), growthStone(attribute, "Premium", 16)],
+        [units(28_000), growthStone(attribute, "Premium", 16)],
+        [units(38_000), growthStone(attribute, "Premium", 16)],
+        [
+          units(38_000),
+          growthStone(attribute, "Premium", 18),
+          item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
         ],
-        rankCostsComplete: [true, true, true, true, true],
-      }),
+        [
+          units(38_000),
+          growthStone(attribute, "Premium", 18),
+          item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
+          item("undetermined-ego-crystal", "Undetermined Ego Crystal", 1),
+        ],
+      ],
+      rankCostsComplete: Array(5).fill(true),
       costs: [
         units(170_000),
         growthStone(attribute, "Premium", 84),
@@ -215,26 +211,23 @@ function makeNodes(
       mapPosition: { x: 80, y: 31 },
       rankCap: 5,
       levelZeroCosts: [units(42_000), growthStone(attribute, "Premium", 20)],
-      ...(verifiedRanks.criticalDamageRankOne && {
-        rankCap: 5,
-        knownRankCosts: [
-          [units(42_000), growthStone(attribute, "Premium", 20)],
-          [units(42_000), growthStone(attribute, "Premium", 20)],
-          [units(42_000), growthStone(attribute, "Premium", 24)],
-          [
-            units(42_000),
-            growthStone(attribute, "Premium", 24),
-            item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
-          ],
-          [
-            units(42_000),
-            growthStone(attribute, "Premium", 28),
-            item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
-            item("undetermined-ego-crystal", "Undetermined Ego Crystal", 1),
-          ],
+      knownRankCosts: [
+        [units(42_000), growthStone(attribute, "Premium", 20)],
+        [units(42_000), growthStone(attribute, "Premium", 20)],
+        [units(42_000), growthStone(attribute, "Premium", 24)],
+        [
+          units(42_000),
+          growthStone(attribute, "Premium", 24),
+          item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
         ],
-        rankCostsComplete: [true, true, true, true, true],
-      }),
+        [
+          units(42_000),
+          growthStone(attribute, "Premium", 28),
+          item("shards-of-condemnation", "Shards of Condemnation (Judas)", 1),
+          item("undetermined-ego-crystal", "Undetermined Ego Crystal", 1),
+        ],
+      ],
+      rankCostsComplete: Array(5).fill(true),
       costs: [
         units(210_000),
         growthStone(attribute, "Premium", 116),
@@ -293,7 +286,6 @@ const characterSpecificProfiles: Record<string, PotentialProfile> = {
       "Void",
       ["Critical Chance Proficiency", "Critical Damage"],
       {
-        criticalChanceRankOne: true,
         criticalDamageRankOne: true,
         cardEpiphany: true,
         uniqueStatUpgrade: true,

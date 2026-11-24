@@ -316,18 +316,6 @@
   text-align: center;
 }
 
-.empty-icon {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
-  border: 1px solid var(--border);
-  border-radius: 15px;
-  background: var(--surface-raised);
-  color: var(--accent);
-}
-
 .empty-state h3,
 .inventory-empty h3,
 .requirements-empty h3 {
@@ -342,6 +330,15 @@
   margin: 6px 0 17px;
   color: var(--text-muted);
   font-size: 0.78rem;
+}
+
+.plans-panel .empty-state h3 {
+  font-size: 1.2rem;
+}
+
+.plans-panel .empty-state p {
+  margin: 8px 0 0;
+  font-size: 1rem;
 }
 
 .plan-list {
@@ -369,6 +366,10 @@
   overflow: hidden;
   border-radius: inherit;
   pointer-events: none;
+}
+
+.plan-card[data-plan-id="blazebell"] .plan-card-background-art {
+  display: none;
 }
 
 .plan-card-background-art img {
@@ -883,6 +884,13 @@ body.is-plan-reordering * {
   object-position: center 24%;
 }
 
+.character-picker-icon img.character-picker-icon-image--square {
+  box-sizing: border-box;
+  padding: 8px;
+  object-fit: contain;
+  object-position: center;
+}
+
 .character-picker-name {
   font-size: 0.86rem;
   font-weight: 650;
@@ -1330,28 +1338,20 @@ body.is-plan-reordering * {
 .requirements-empty {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   padding: 17px 0 18px;
-}
-
-.requirements-art {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
-  border: 1px solid var(--amber-border);
-  border-radius: 16px;
-  background: var(--amber-soft);
-  color: var(--amber);
-  font-size: 1.55rem;
+  text-align: center;
 }
 
 .requirements-empty p {
-  margin: 7px 0 0;
+  margin: 8px 0 0;
   color: var(--text-muted);
-  font-size: 0.77rem;
+  font-size: 1rem;
   line-height: 1.6;
+}
+
+.requirements-empty h3 {
+  font-size: 1.2rem;
 }
 
 .requirements-grid {
